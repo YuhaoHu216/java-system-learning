@@ -1,0 +1,15 @@
+1.可以用一个循环遍历二维数组
+data为二维数组,arr为存数字的数组
+for (int i = 0;i<4;i++){
+    data[i/4][i%4] = arr[i];
+    }
+
+2.或是
+int index= 0;
+for(int i = 0;i<data.length;i++){
+    for(int j = 0;j<data[i].length;j++){
+    data[i][j] = arr[index];
+    index++;
+    }
+}
+

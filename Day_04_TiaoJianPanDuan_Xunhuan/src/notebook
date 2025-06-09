@@ -1,0 +1,4 @@
+1.switch的表达式取值可以为byte，short，int，char，JDK5后可以为枚举，JDK7后可以为String。case后面只能是字面量不能是变量。default位置随便总是最后执行。
+2.case穿透当有一个case符合时，开始执行这个case及以下的代码，知道出现break或者大括号
+3.continue和break和python一样
+4.
