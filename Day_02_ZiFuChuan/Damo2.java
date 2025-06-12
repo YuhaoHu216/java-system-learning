@@ -1,3 +1,5 @@
+package Day_02_ZiFuChuan;
+
 import java.util.Scanner;
 
 public class Damo2 {
