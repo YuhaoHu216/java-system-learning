@@ -195,3 +195,87 @@ System.out.println(s);//⑤
 == 当是基本数据类型时比较的是数据值，当是引用数据类型的时候比较的是地址值
 
 equals()/equalsIgnoreCase() 比较引用数据比的是内容,后者忽略大小写
+
+### 常用方法
+
+```java
+int long = str.length();  // 获取字符串长度
+char c = str.charAt(5);  // 获取字符串该索引的字符
+String s = str.substring(); // 两个数包头不包尾,一个数怎截取到末尾
+String result = talk.replace("TMD","***"); // 字符串替换
+
+```
+
+### StringBuilder
+
+`StringBuilder` 是一个**可变**的字符序列，用于高效地构建字符串，适用于**单线程环境**。
+
+- **非线程安全**（性能较高，适用于单线程）
+- 字符串内容可变（追加、插入、删除等操作）
+- 常用于频繁修改字符串的场景（如循环拼接）
+
+常用方法
+- `append(str)`：追加字符串
+- `insert(offset, str)`：在指定位置插入
+- `delete(start, end)`：删除字符
+- `replace(start, end, str)`：替换字符
+- `reverse()`：字符串反转
+- `toString()`：转为 String
+
+```java
+StringBuild sb = new StringBuild("abc");
+sb.append("6").append("ada"); // 添加元素
+sb.reverse() // 反转
+sb.length(); // 获取长度
+// sb所有返回的都是StringBuilder,可以链式编程
+String str = sb.toString(); // 转成字符串
+```
+
+### StringJoiner
+
+`StringJoiner` 是 Java 8 引入的新类，用于连接一系列字符串，自动加上**分隔符、前缀和后缀**。
+
+- 更加方便地构造带分隔符的字符串，如 CSV、路径
+- 适合处理集合拼接场景
+- **不是线程安全的**
+
+常用方法:
+
+- `add(element)`：添加元素
+- `merge(other)`：合并其他 StringJoiner
+- `setEmptyValue(val)`：设定无元素时的默认值
+- `toString()`：返回拼接结果
+
+基本使用：
+
+```java
+//1.创建一个对象，并指定中间的间隔符号
+StringJoiner sj = new StringJoiner("---");
+//2.添加元素
+sj.add("aaa").add("bbb").add("ccc");
+//3.打印结果
+System.out.println(sj);//aaa---bbb---ccc
+```
+
+```java
+//1.创建对象
+StringJoiner sj = new StringJoiner(", ","[","]");
+//2.添加元素
+sj.add("aaa").add("bbb").add("ccc");
+int len = sj.length();
+System.out.println(len);//15
+//3.打印
+System.out.println(sj);//[aaa, bbb, ccc]
+String str = sj.toString();
+System.out.println(str);//[aaa, bbb, ccc]
+```
+
+### StringBuffer
+
+`StringBuffer` 与 `StringBuilder` 类似，也是可变字符串类，但它是**线程安全**的。
+
+- **线程安全**（所有方法都加了 `synchronized`）
+- 比 `StringBuilder` 稍慢，适用于**多线程环境**
+- API 与 `StringBuilder` 几乎相同
+
+常用方法同StringBuilder但是是线程安全的
