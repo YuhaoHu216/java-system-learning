@@ -279,3 +279,8 @@ System.out.println(str);//[aaa, bbb, ccc]
 - API 与 `StringBuilder` 几乎相同
 
 常用方法同StringBuilder但是是线程安全的
+
+## 8.集合
+
+​                                                                                                                                                        
+
