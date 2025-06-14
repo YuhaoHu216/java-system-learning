@@ -427,4 +427,71 @@ class D extends C1 {}
 
 **转型**
 
+**向上转型**：多态本身是子类类型向父类类型向上转换（自动转换）的过程，这个过程是默认的。
+当父类引用指向一个子类对象时，便是向上转型。
+使用格式：
 
+```java
+父类类型  变量名 = new 子类类型();
+如：Animal a = new Cat();
+```
+
+**向下转型**：父类类型向子类类型向下转换的过程，这个过程是强制的。
+一个已经向上转型的子类对象，将父类引用转为子类引用，可以使用强制类型转换的格式，便是向下转型。
+
+使用格式：
+
+```java
+子类类型 变量名 = (子类类型) 父类变量名;
+如:Aniaml a = new Cat();
+   Cat c =(Cat) a;  
+```
+
+**转型的异常**
+
+转型的过程中，一不小心就会遇到这样的问题，请看如下代码：
+
+```java
+public class Test {
+    public static void main(String[] args) {
+        // 向上转型  
+        Animal a = new Cat();  
+        a.eat();               // 调用的是 Cat 的 eat
+
+        // 向下转型  
+        Dog d = (Dog)a;       
+        d.watchHouse();        // 调用的是 Dog 的 watchHouse 【运行报错】
+    }  
+}
+```
+
+这段代码可以通过编译，但是运行时，却报出了 `ClassCastException` ，类型转换异常！这是因为，明明创建了Cat类型对象，运行时，当然不能转换成Dog对象的。
+
+**instanceof关键字**
+
+为了避免ClassCastException的发生，Java提供了 `instanceof` 关键字，给引用变量做类型的校验，格式如下：
+
+```java
+变量名 instanceof 数据类型 
+如果变量属于该数据类型或者其子类类型，返回true。
+如果变量不属于该数据类型或者其子类类型，返回false。
+```
+
+**instanceof新特性**
+
+JDK14的时候提出了新特性，把判断和强转合并成了一行
+
+```java
+//新特性
+//先判断a是否为Dog类型，如果是，则强转成Dog类型，转换之后变量名为d
+//如果不是，则不强转，结果直接是false
+if(a instanceof Dog d){
+    d.lookHome();
+}else if(a instanceof Cat c){
+    c.catchMouse();
+}else{
+    System.out.println("没有这个类型，无法转换");
+}
+```
+
+### 
