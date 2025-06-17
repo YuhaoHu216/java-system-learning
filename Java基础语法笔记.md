@@ -1068,3 +1068,102 @@ public class Demo07 {
 }
 ```
 
+## 10.常用API
+
+### 1.Math类
+
+常用方法
+
+我们要学习的Math的常见方法如下所示：
+
+```java
+public static int abs(int a)					// 返回参数的绝对值
+public static double ceil(double a)				// 返回大于或等于参数的最小整数
+public static double floor(double a)			// 返回小于或等于参数的最大整数
+public static int round(float a)				// 按照四舍五入返回最接近参数的int类型的值
+public static int max(int a,int b)				// 获取两个int值中的较大值
+public static int min(int a,int b)				// 获取两个int值中的较小值
+public static double pow (double a,double b)	// 计算a的b次幂的值
+public static double random()					// 返回一个[0.0,1.0)的随机值
+```
+
+### 2.System类
+
+<font color="red" size="3">**常见方法介绍**</font>
+
+我们要学习的System类中的常见方法如下所示：
+
+```java
+public static long currentTimeMillis()			// 获取当前时间所对应的毫秒值（当前时间为0时区所对应的时间即就是英国格林尼治天文台旧址所在位置,用于获取一个程序开始和结束的时间然后相减）
+public static void exit(int status)				// 终止当前正在运行的Java虚拟机，0表示正常退出，非零表示异常退出
+public static native void arraycopy(Object src,  int  srcPos, Object dest, int destPos, int length); // 进行数值元素copy
+```
+
+**arraycopy方法底层细节：**
+
+1.如果数据源数组和目的地数组都是基本数据类型，那么两者的类型必须保持一致，否则会报错
+
+2.在拷贝的时候需要考虑数组的长度，如果超出范围也会报错
+
+3.如果数据源数组和目的地数组都是引用数据类型，那么子类类型可以赋值给父类类型
+
+### 3.Runtime
+
+我们要学习的RunTime类中的常见方法如下所示：
+
+```java
+public static Runtime getRuntime()		//当前系统的运行环境对象
+public void exit(int status)			//停止虚拟机
+public int availableProcessors()		//获得CPU的线程数
+public long maxMemory()				    //JVM能从系统中获取总内存大小（单位byte）
+public long totalMemory()				//JVM已经从系统中获取总内存大小（单位byte）
+public long freeMemory()				//JVM剩余内存大小（单位byte）
+public Process exec(String command) 	//运行cmd命令
+```
+
+### 4.Object
+
+<font color="red" size="3">**常见方法介绍**</font>
+
+我们要学习的Object类中的常见方法如下所示：
+
+```java
+public String toString()				//返回该对象的字符串表示形式(可以看做是对象的内存地址值)
+public boolean equals(Object obj)		//比较两个对象地址值是否相等；true表示相同，false表示不相同
+protected Object clone()    			//对象克隆
+```
+
+**toString小结：**
+
+1.在通过输出语句输出一个对象时，默认调用的就是toString()方法
+
+2.输出地址值一般没有意义，我们可以通过重写toString方法去输出对应的成员变量信息（快捷键：atl + insert ， 空白处 右键 -> Generate -> 选择toString）
+
+3.toString方法的作用：以良好的格式，更方便的展示对象中的属性值
+
+4.一般情况下JDK所提供的类都会重写Object类中的toString方法
+
+**equals小结**
+
+1.默认情况下equals方法比较的是对象的地址值
+
+2.比较对象的地址值是没有意义的，因此一般情况下我们都会重写Object类中的equals方法
+
+**clone小结**
+
+浅克隆：
+
+​	不管对象内部的属性是基本数据类型还是引用数据类型，都完全拷贝过来 
+
+​	基本数据类型拷贝过来的是具体的数据，引用数据类型拷贝过来的是地址值。
+
+​	Object类默认的是浅克隆
+
+深克隆：
+
+​	基本数据类型拷贝过来，字符串复用，引用数据类型会重新创建新的
+
+###  5.Objects类
+
+
+
