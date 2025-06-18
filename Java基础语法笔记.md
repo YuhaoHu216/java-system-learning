@@ -1165,5 +1165,26 @@ protected Object clone()    			//对象克隆
 
 ###  5.Objects类
 
+<font color="red" size="3">**常见方法介绍**</font>
 
+我们要重点学习的Objects类中的常见方法如下所示：
+
+```java
+public static String toString(Object o) 					// 获取对象的字符串表现形式
+public static boolean equals(Object a, Object b)			// 比较两个对象是否相等
+public static boolean isNull(Object obj)					// 判断对象是否为null
+public static boolean nonNull(Object obj)					// 判断对象是否不为null
+```
+
+我们要了解的Objects类中的常见方法如下所示：
+
+```java
+public static <T> T requireNonNull(T obj)					// 检查对象是否不为null,如果为null直接抛出异常；如果不是null返回该对象；
+public static <T> T requireNonNullElse(T obj, T defaultObj) // 检查对象是否不为null，如果不为null，返回该对象；如果为null返回defaultObj值
+public static <T> T requireNonNullElseGet(T obj, Supplier<? extends T> supplier)	// 检查对象是否不为null，如果不为null，返回该对象；如果															 // 为null,返回由Supplier所提供的值
+```
+
+上述方法中的T可以理解为是Object类型。
+
+### 6.BigInteger类
 
