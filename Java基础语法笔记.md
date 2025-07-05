@@ -1210,7 +1210,7 @@ public static BigInteger valueOf(long val) 	//静态方法获取BigInteger的对
 
 <font color="red" size="3">**常见成员方法**</font>
 
-BigDecimal类中使用最多的还是提供的进行四则运算的方法，如下：
+BigInteger类中使用最多的还是提供的进行四则运算的方法，如下：
 
 ```java
 public BigInteger add(BigInteger val)					//加法
@@ -1224,3 +1224,37 @@ public  BigInteger max/min(BigInteger val) 				//返回较大值/较小值
 public  int intValue(BigInteger val) 					//转为int类型整数，超出范围数据有误
 ```
 
+存储方式是将具体的数字变为二进制,每32个bit为一组存储到数组里比如27670116110564327424 -> [1,-2147483648,0]
+
+### 7.BigDecimal
+
+在用float和double时会产生精度丢失问题，因为十进制数据会转为二进制数据进行计算有些数据转化时会产生无限循环，用这个不太准的数据进行运算时就会造成精度丢失的问题。BigDecimal就是用来解决这个问题的。
+
+<font color="red" size="3">**常见成员方法**</font>
+
+BigDecimal类中使用最多的还是提供的进行四则运算的方法，如下：
+
+```java
+public BigDecimal add(BigDecimal value)				// 加法运算
+public BigDecimal subtract(BigDecimal value)		// 减法运算
+public BigDecimal multiply(BigDecimal value)		// 乘法运算
+public BigDecimal divide(BigDecimal value)			// 除法运算,前除以后
+```
+
+当除法运算的结果是一个循环小数时就会报错，就要用到divide的一个重载方法
+
+```java
+BigDecimal divide(BigDecimal divisor, int scale, int roundingMode)
+```
+
+上述divide方法参数说明：
+
+```
+divisor:			除数对应的BigDecimal对象；
+scale:				精确的位数；
+roundingMode:		取舍模式；
+取舍模式被封装到了RoundingMode这个枚举类中（关于枚举我们后期再做重点讲解），在这个枚举类中定义了很多种取舍方式。最常见的取舍方式有如下几个：
+UP(直接进1) ， FLOOR(直接删除) ， HALF_UP(4舍五入),我们可以通过如下格式直接访问这些取舍模式：枚举类名.变量名
+```
+
+底层存储方式是讲数据看成一个字符串然后讲这些字符的ASCII码表上的值存储到数组中
