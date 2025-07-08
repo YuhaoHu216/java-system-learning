@@ -964,6 +964,113 @@ public class MySet1 {
   + 如果返回值为0，表示当前存入的元素跟集合中元素重复了，不存
   + 如果返回值为正数，表示当前存入的元素是较大值，存右边
 
+### Map集合
+
+```java
+interface Map<K,V>    键值对
+```
+
+Map是一个双列集合,一个键对应一个值
+
+键不可以重复,值可以重复
+
+```java
+public class MapDemo01 {
+    public static void main(String[] args) {
+        Map<String,String> map = new HashMap<>();
+        map.put("001","HYH");
+        map.put("002","胡宇浩");
+        System.out.println(map);   // {001=HYH, 002=胡宇浩}
+    }
+}
+```
+
+- 基本功能方法介绍
+
+  | 方法名                              | 说明                                 |
+  | ----------------------------------- | ------------------------------------ |
+  | V   put(K key,V   value)            | 添加元素                             |
+  | V   remove(Object key)              | 根据键删除键值对元素                 |
+  | void   clear()                      | 移除所有的键值对元素                 |
+  | boolean containsKey(Object key)     | 判断集合是否包含指定的键             |
+  | boolean containsValue(Object value) | 判断集合是否包含指定的值             |
+  | boolean isEmpty()                   | 判断集合是否为空                     |
+  | int size()                          | 集合的长度，也就是集合中键值对的个数 |
+
+- 获取功能
+
+  | 方法名                           | 说明                     |
+  | -------------------------------- | ------------------------ |
+  | V   get(Object key)              | 根据键获取值             |
+  | Set<K>   keySet()                | 获取所有键的集合         |
+  | Collection<V>   values()         | 获取所有值的集合         |
+  | Set<Map.Entry<K,V>>   entrySet() | 获取所有键值对对象的集合 |
+
+**遍历**
+
+1.
+
+```java
+public class MapDemo01 {
+    public static void main(String[] args) {
+        //创建集合对象
+        Map<String, String> map = new HashMap<String, String>();
+
+        //添加元素
+        map.put("张无忌", "赵敏");
+        map.put("郭靖", "黄蓉");
+        map.put("杨过", "小龙女");
+
+        //获取所有键的集合。用keySet()方法实现
+        Set<String> keySet = map.keySet();
+        //遍历键的集合，获取到每一个键。用增强for实现
+        for (String key : keySet) {
+            //根据键去找值。用get(Object key)方法实现
+            String value = map.get(key);
+            System.out.println(key + "," + value);
+        }
+    }
+}
+```
+
+2.
+
+```java
+public class MapDemo02 {
+    public static void main(String[] args) {
+        //创建集合对象
+        Map<String, String> map = new HashMap<String, String>();
+
+        //添加元素
+        map.put("张无忌", "赵敏");
+        map.put("郭靖", "黄蓉");
+        map.put("杨过", "小龙女");
+
+        //获取所有键值对对象的集合
+        Set<Map.Entry<String, String>> entrySet = map.entrySet();
+        //遍历键值对对象的集合，得到每一个键值对对象
+        for (Map.Entry<String, String> me : entrySet) {
+            //根据键值对对象获取键和值
+            String key = me.getKey();
+            String value = me.getValue();
+            System.out.println(key + "," + value);
+        }
+    }
+}
+```
+
+### HashMap集合
+
++ HashMap底层是哈希表结构的
++ 依赖hashCode方法和equals方法保证键的唯一
++ 如果键要存储的是自定义对象，需要重写hashCode和equals方法
+
+
+
+
+
+
+
 ## 9.面向对象高级
 
 ### static关键字
