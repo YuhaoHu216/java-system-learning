@@ -1065,7 +1065,11 @@ public class MapDemo02 {
 + 依赖hashCode方法和equals方法保证键的唯一
 + 如果键要存储的是自定义对象，需要重写hashCode和equals方法
 
+### TreeMap集合
 
++ TreeMap底层是红黑树结构
++ 依赖自然排序或者比较器排序,对键进行排序
++ 如果键存储的是自定义对象,需要实现Comparable接口或者在创建TreeMap对象时候给出比较器排序规则
 
 
 
