@@ -6,6 +6,8 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/8.Collection" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/8.Collection/Map" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/14.Stream和方法引用" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/15.异常" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

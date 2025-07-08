@@ -2921,3 +2921,710 @@ public class A05_QuickSortDemo {
 }
 ```
 
+## 14.stream流和方法引用
+
+### 1.不可变集合
+
+是一个长度和内容都无法修改的集合，不能删除
+
+使用场景:
+
+​			如果某个数据不能被修改，把它防御性地拷贝到不可变集合中是个很好的实践。
+
+​			当集合对象被不可信的库调用时，不可变形式是安全的。
+
+简单理解：
+
+​			不想让别人改集合中的内容
+
+比如说：
+
+1，斗地主的54张牌，是不能添加，不能删除，不能修改的
+
+2，斗地主的打牌规则：单张，对子，三张，顺子等，也是不能修改的
+
+3，用代码获取的操作系统硬件信息，也是不能被修改的
+
+分类:
+
+​	不可变的list集合
+
+​	不可变的set集合
+
+​	不可变的map集合
+
+使用这三个类的of方法就可以创建不可变的集合(其中Map的方法适用于键值对个数小于十)
+
+```java
+List<String> list = List.of("张三", "李四", "王五", "赵六");
+Set<String> set = Set.of("张三", "张三", "李四", "王五", "赵六");
+Map<String, String> map = Map.of("张三", "南京", "张三", "北京", "王五", "上海",
+                "赵六", "广州", "孙七", "深圳", "周八", "杭州",
+                "吴九", "宁波", "郑十", "苏州", "刘一", "无锡",
+                "陈二", "嘉兴");
+```
+
+不可变的map集合键值对个数大于十
+
+```java
+public class ImmutableDemo4 {
+    public static void main(String[] args) {
+
+        /*
+            创建Map的不可变集合,键值对的数量超过10个
+        */
+
+        //1.创建一个普通的Map集合
+        HashMap<String, String> hm = new HashMap<>();
+        hm.put("张三", "南京");
+        hm.put("李四", "北京");
+        hm.put("王五", "上海");
+        hm.put("赵六", "北京");
+        hm.put("孙七", "深圳");
+        hm.put("周八", "杭州");
+        hm.put("吴九", "宁波");
+        hm.put("郑十", "苏州");
+        hm.put("刘一", "无锡");
+        hm.put("陈二", "嘉兴");
+        hm.put("aaa", "111");
+
+        //2.利用上面的数据来获取一个不可变的集合
+/*
+        //获取到所有的键值对对象（Entry对象）
+        Set<Map.Entry<String, String>> entries = hm.entrySet();
+        //把entries变成一个数组
+        Map.Entry[] arr1 = new Map.Entry[0];
+        //toArray方法在底层会比较集合的长度跟数组的长度两者的大小
+        //如果集合的长度 > 数组的长度 ：数据在数组中放不下，此时会根据实际数据的个数，重新创建数组
+        //如果集合的长度 <= 数组的长度：数据在数组中放的下，此时不会创建新的数组，而是直接用
+        Map.Entry[] arr2 = entries.toArray(arr1);
+        //不可变的map集合
+        Map map = Map.ofEntries(arr2);
+        map.put("bbb","222");*/
+
+
+        //Map<Object, Object> map = Map.ofEntries(hm.entrySet().toArray(new Map.Entry[0]));
+
+        Map<String, String> map = Map.copyOf(hm);
+        map.put("bbb","222");
+    }
+}
+```
+
+### 2.Stream流
+
+- 直接阅读代码的字面意思即可完美展示无关逻辑方式的语义：获取流、过滤姓张、过滤长度为3、逐一打印
+- Stream流把真正的函数式编程风格引入到Java中
+- 代码简洁
+
+Stream流的三类方法
+
+- 获取Stream流
+  - 创建一条流水线,并把数据放到流水线上准备进行操作
+- 中间方法
+  - 流水线上的操作
+  - 一次操作完毕之后,还可以继续进行其他操作
+- 终结方法
+  - 一个Stream流只能有一个终结方法
+  - 是流水线上的最后一个操作
+
+生成Stream流的方式
+
+- Collection体系集合
+
+  使用默认方法stream()生成流， default Stream<E> stream()
+
+- Map体系集合
+
+  把Map转成Set集合，间接的生成流
+
+- 数组
+
+  通过Arrays中的静态方法stream生成流
+
+- 同种数据类型的多个数据
+
+  通过Stream接口的静态方法of(T... values)生成流
+
+```java
+public class StreamDemo {
+    public static void main(String[] args) {
+        //Collection体系的集合可以使用默认方法stream()生成流
+        List<String> list = new ArrayList<String>();
+        Stream<String> listStream = list.stream();
+
+        Set<String> set = new HashSet<String>();
+        Stream<String> setStream = set.stream();
+
+        //Map体系的集合间接的生成流
+        Map<String,Integer> map = new HashMap<String, Integer>();
+        Stream<String> keyStream = map.keySet().stream();
+        Stream<Integer> valueStream = map.values().stream();
+        Stream<Map.Entry<String, Integer>> entryStream = map.entrySet().stream();
+
+        //数组可以通过Arrays中的静态方法stream生成流
+        String[] strArray = {"hello","world","java"};
+        Stream<String> strArrayStream = Arrays.stream(strArray);
+      
+      	//同种数据类型的多个数据可以通过Stream接口的静态方法of(T... values)生成流
+        Stream<String> strArrayStream2 = Stream.of("hello", "world", "java");
+        Stream<Integer> intStream = Stream.of(10, 20, 30);
+    }
+}
+```
+
+**Stream流的中间操作方法**
+
+中间操作的意思是,执行完此方法之后,Stream流依然可以继续执行其他操作
+
+| 方法名                                          | 说明                                                       |
+| ----------------------------------------------- | ---------------------------------------------------------- |
+| Stream<T> filter(Predicate predicate)           | 用于对流中的数据进行过滤                                   |
+| Stream<T> limit(long maxSize)                   | 返回此流中的元素组成的流，截取前指定参数个数的数据         |
+| Stream<T> skip(long n)                          | 跳过指定参数个数的数据，返回由该流的剩余元素组成的流       |
+| static <T> Stream<T> concat(Stream a, Stream b) | 合并a和b两个流为一个流                                     |
+| Stream<T> distinct()                            | 返回由该流的不同元素（根据Object.equals(Object) ）组成的流 |
+
+**Stream流的终结操作方法**
+
+终结操作的意思是,执行完此方法之后,Stream流将不能再执行其他操作
+
+| 方法名                        | 说明                     |
+| ----------------------------- | ------------------------ |
+| void forEach(Consumer action) | 对此流的每个元素执行操作 |
+| long count()                  | 返回此流中的元素数       |
+
+**Stream流的收集操作**
+
+对数据使用Stream流的方式操作完毕后,可以把流中的数据收集到集合中
+
+| 方法名                         | 说明               |
+| ------------------------------ | ------------------ |
+| R collect(Collector collector) | 把结果收集到集合中 |
+
+工具类Collectors提供了具体的收集方式
+
+| 方法名                                                       | 说明                   |
+| ------------------------------------------------------------ | ---------------------- |
+| public static <T> Collector toList()                         | 把元素收集到List集合中 |
+| public static <T> Collector toSet()                          | 把元素收集到Set集合中  |
+| public static  Collector toMap(Function keyMapper,Function valueMapper) | 把元素收集到Map集合中  |
+
+### 3.方法引用
+
+在使用Lambda表达式的时候，我们实际上传递进去的代码就是一种解决方案：拿参数做操作
+
+那么考虑一种情况：如果我们在Lambda中所指定的操作方案，已经有地方存在相同方案，那是否还有必要再写重复逻辑呢？答案肯定是没有必要
+
+那我们又是如何使用已经存在的方案的呢？
+
+这就是我们要讲解的方法引用，我们是通过方法引用来使用已经存在的方案
+
+```java
+public interface Printable {
+    void printString(String s);
+}
+
+public class PrintableDemo {
+    public static void main(String[] args) {
+        //在主方法中调用usePrintable方法
+//        usePrintable((String s) -> {
+//            System.out.println(s);
+//        });
+	    //Lambda简化写法
+        usePrintable(s -> System.out.println(s));
+
+        //方法引用
+        usePrintable(System.out::println);
+
+    }
+
+    private static void usePrintable(Printable p) {
+        p.printString("爱生活爱Java");
+    }
+}
+
+```
+
+- 方法引用符
+
+  ::  该符号为引用运算符，而它所在的表达式被称为方法引用
+
+- 推导与省略
+
+  - 如果使用Lambda，那么根据“可推导就是可省略”的原则，无需指定参数类型，也无需指定的重载形式，它们都将被自动推导
+  - 如果使用方法引用，也是同样可以根据上下文进行推导
+  - 方法引用是Lambda的孪生兄弟
+
+**引用类方法**
+
+引用类方法，其实就是引用类的静态方法
+
+- 格式
+
+  类名::静态方法
+
+- 范例
+
+  Integer::parseInt
+
+  Integer类的方法：public static int parseInt(String s) 将此String转换为int类型数据
+
+- 练习描述
+
+  - 定义一个接口(Converter)，里面定义一个抽象方法 int convert(String s);
+  - 定义一个测试类(ConverterDemo)，在测试类中提供两个方法
+    - 一个方法是：useConverter(Converter c)
+    - 一个方法是主方法，在主方法中调用useConverter方法
+
+```java
+public interface Converter {
+    int convert(String s);
+}
+
+public class ConverterDemo {
+    public static void main(String[] args) {
+
+		//Lambda写法
+        useConverter(s -> Integer.parseInt(s));
+
+        //引用类方法
+        useConverter(Integer::parseInt);
+
+    }
+
+    private static void useConverter(Converter c) {
+        int number = c.convert("666");
+        System.out.println(number);
+    }
+}
+```
+
+Lambda表达式被类方法替代的时候，它的形式参数全部传递给静态方法作为参数
+
+**引用对象的示例方法**
+
+引用对象的实例方法，其实就引用类中的成员方法
+
+- 格式
+
+  对象::成员方法
+
+- 范例
+
+  "HelloWorld"::toUpperCase
+
+    String类中的方法：public String toUpperCase() 将此String所有字符转换为大写
+
+- 练习描述
+
+  - 定义一个类(PrintString)，里面定义一个方法
+
+    public void printUpper(String s)：把字符串参数变成大写的数据，然后在控制台输出
+
+  - 定义一个接口(Printer)，里面定义一个抽象方法
+
+    void printUpperCase(String s)
+
+  - 定义一个测试类(PrinterDemo)，在测试类中提供两个方法
+
+    - 一个方法是：usePrinter(Printer p)
+    - 一个方法是主方法，在主方法中调用usePrinter方法
+
+```java
+public class PrintString {
+    //把字符串参数变成大写的数据，然后在控制台输出
+    public void printUpper(String s) {
+        String result = s.toUpperCase();
+        System.out.println(result);
+    }
+}
+
+public interface Printer {
+    void printUpperCase(String s);
+}
+
+public class PrinterDemo {
+    public static void main(String[] args) {
+
+		//Lambda简化写法
+        usePrinter(s -> System.out.println(s.toUpperCase()));
+
+        //引用对象的实例方法
+        PrintString ps = new PrintString();
+        usePrinter(ps::printUpper);
+
+    }
+
+    private static void usePrinter(Printer p) {
+        p.printUpperCase("HelloWorld");
+    }
+}
+
+```
+
+Lambda表达式被对象的实例方法替代的时候，它的形式参数全部传递给该方法作为参数
+
+**引用类的实例方法**
+
+引用类的实例方法，其实就是引用类中的成员方法
+
+- 格式
+
+  类名::成员方法
+
+- 范例
+
+  String::substring
+
+  public String substring(int beginIndex,int endIndex) 
+
+  从beginIndex开始到endIndex结束，截取字符串。返回一个子串，子串的长度为endIndex-beginIndex
+
+- 练习描述
+
+  - 定义一个接口(MyString)，里面定义一个抽象方法：
+
+    String mySubString(String s,int x,int y);
+
+  - 定义一个测试类(MyStringDemo)，在测试类中提供两个方法
+
+    - 一个方法是：useMyString(MyString my)
+    - 一个方法是主方法，在主方法中调用useMyString方法
+
+```java
+public interface MyString {
+    String mySubString(String s,int x,int y);
+}
+
+public class MyStringDemo {
+    public static void main(String[] args) {
+		//Lambda简化写法
+        useMyString((s,x,y) -> s.substring(x,y));
+
+        //引用类的实例方法
+        useMyString(String::substring);
+
+    }
+
+    private static void useMyString(MyString my) {
+        String s = my.mySubString("HelloWorld", 2, 5);
+        System.out.println(s);
+    }
+}
+```
+
+   Lambda表达式被类的实例方法替代的时候
+    第一个参数作为调用者
+    后面的参数全部传递给该方法作为参数
+
+**引用构造器**
+
+​	引用构造器，其实就是引用构造方法
+
+- 格式
+
+  类名::new
+
+- 范例
+
+  Student::new
+
+- 练习描述
+
+  - 定义一个类(Student)，里面有两个成员变量(name,age)
+
+    并提供无参构造方法和带参构造方法，以及成员变量对应的get和set方法
+
+  - 定义一个接口(StudentBuilder)，里面定义一个抽象方法
+
+    Student build(String name,int age);
+
+  - 定义一个测试类(StudentDemo)，在测试类中提供两个方法
+
+    - 一个方法是：useStudentBuilder(StudentBuilder s)
+    - 一个方法是主方法，在主方法中调用useStudentBuilder方法
+
+  ```java
+  public class Student {
+      private String name;
+      private int age;
+  
+      public Student() {
+      }
+  
+      public Student(String name, int age) {
+          this.name = name;
+          this.age = age;
+      }
+  
+      public String getName() {
+          return name;
+      }
+  
+      public void setName(String name) {
+          this.name = name;
+      }
+  
+      public int getAge() {
+          return age;
+      }
+  
+      public void setAge(int age) {
+          this.age = age;
+      }
+  }
+  
+  public interface StudentBuilder {
+      Student build(String name,int age);
+  }
+  
+  public class StudentDemo {
+      public static void main(String[] args) {
+  
+  		//Lambda简化写法
+          useStudentBuilder((name,age) -> new Student(name,age));
+  
+          //引用构造器
+          useStudentBuilder(Student::new);
+  
+      }
+  
+      private static void useStudentBuilder(StudentBuilder sb) {
+          Student s = sb.build("林青霞", 30);
+          System.out.println(s.getName() + "," + s.getAge());
+      }
+  }
+  ```
+
+  Lambda表达式被构造器替代的时候，它的形式参数全部传递给构造器作为参数
+
+
+## 15.异常
+
+* **异常** ：指的是程序在执行过程中，出现的非正常的情况，最终会导致JVM的非正常停止。
+
+在Java等面向对象的编程语言中，异常本身是一个类，产生异常就是创建异常对象并抛出了一个异常对象。Java处理异常的方式是中断处理。
+
+> 异常指的并不是语法错误,语法错了,编译不通过,不会产生字节码文件,根本不能运行.
+
+异常机制其实是帮助我们**找到**程序中的问题，异常的根类是`java.lang.Throwable`，其下有两个子类：`java.lang.Error`与`java.lang.Exception`，平常所说的异常指`java.lang.Exception`。
+
+**Throwable体系：**
+
+* **Error**:严重错误Error，无法通过处理的错误，只能事先避免，好比绝症。
+* **Exception**:表示异常，异常产生后程序员可以通过代码的方式纠正，使程序继续运行，是必须要处理的。好比感冒、阑尾炎。
+
+**Throwable中的常用方法：**
+
+* `public void printStackTrace()`:打印异常的详细信息。
+
+  *包含了异常的类型,异常的原因,还包括异常出现的位置,在开发和调试阶段,都得使用printStackTrace。*
+
+* `public String getMessage()`:获取发生异常的原因。
+
+  *提示给用户的时候,就提示错误原因。*
+
+* `public String toString()`:获取异常的类型和异常描述信息(不用)。
+
+### 分类
+
+* **编译时期异常**:checked异常。在编译时期,就会检查,如果没有处理异常,则编译失败。(如日期格式化异常)
+* **运行时期异常**:runtime异常。在运行时期,检查异常.在编译时期,运行异常不会编译器检测(不报错)。(如数学异常)
+
+### 抛出异常throw
+
+在编写程序时，我们必须要考虑程序出现问题的情况。比如，在定义方法时，方法需要接受参数。那么，当调用方法使用接受到的参数时，首先需要先对参数数据进行合法的判断，数据若不合法，就应该告诉调用者，传递合法的数据进来。这时需要使用抛出异常的方式来告诉调用者。
+
+用throw来抛出一个指定的异常对象
+
+1. 创建一个异常对象。封装一些提示信息(信息可以自己编写)。
+
+2. 需要将这个异常对象告知给调用者。怎么告知呢？怎么将这个异常对象传递到调用者处呢？通过关键字throw就可以完成。throw 异常对象。
+
+   throw**用在方法内**，用来抛出一个异常对象，将这个异常对象传递到调用者处，并结束当前方法的执行。
+
+```java
+throw new 异常类名(参数);
+```
+
+如:
+
+```java
+throw new NullPointerException("要访问的arr数组不存在");
+
+throw new ArrayIndexOutOfBoundsException("该索引在数组中不存在，已超出范围");
+```
+
+```java
+public class ThrowDemo {
+    public static void main(String[] args) {
+        //创建一个数组 
+        int[] arr = {2,4,52,2};
+        //根据索引找对应的元素 
+        int index = 4;
+        int element = getElement(arr, index);
+
+        System.out.println(element);
+        System.out.println("over");
+    }
+    /*
+     * 根据 索引找到数组中对应的元素
+     */
+    public static int getElement(int[] arr,int index){ 
+       	//判断  索引是否越界
+        if(index<0 || index>arr.length-1){
+             /*
+             判断条件如果满足，当执行完throw抛出异常对象后，方法已经无法继续运算。
+             这时就会结束当前方法的执行，并将异常告知给调用者。这时就需要通过异常来解决。 
+              */
+             throw new ArrayIndexOutOfBoundsException("哥们，角标越界了```");
+        }
+        int element = arr[index];
+        return element;
+    }
+}
+```
+
+### 异常声明throws
+
+**声明异常**：将问题标识出来，报告给调用者。如果方法内通过throw抛出了编译时异常，而没有捕获处理（稍后讲解该方式），那么必须通过throws进行声明，让调用者去处理。
+
+关键字**throws**运用于方法声明之上,用于表示当前方法不处理异常,而是提醒该方法的调用者来处理异常(抛出异常).
+
+**声明异常格式：**
+
+```
+修饰符 返回值类型 方法名(参数) throws 异常类名1,异常类名2…{   }	
+```
+
+### 捕获异常try...catch
+
+如果异常出现的话,会立刻终止程序,所以我们得处理异常:
+
+1. 该方法不处理,而是声明抛出,由该方法的调用者来处理(throws)。
+2. 在方法中使用try-catch的语句块来处理异常。
+
+**try-catch**的方式就是捕获异常。
+
+* **捕获异常**：Java中对异常有针对性的语句进行捕获，可以对出现的异常进行指定方式的处理。
+
+捕获异常语法如下：
+
+```java
+try{
+     编写可能会出现异常的代码
+}catch(异常类型  e){
+     处理异常的代码
+     //记录日志/打印异常信息/继续抛出异常
+}
+```
+
+**try：**该代码块中编写可能产生异常的代码。
+
+**catch：**用来进行某种异常的捕获，实现对捕获到的异常进行处理。
+
+> 注意:try和catch都不能单独使用,必须连用。
+
+如何获取异常信息：
+
+Throwable类中定义了一些查看方法:
+
+* `public String getMessage()`:获取异常的描述信息,原因(提示给用户的时候,就提示错误原因。
+
+
+* `public String toString()`:获取异常的类型和异常描述信息(不用)。
+* `public void printStackTrace()`:打印异常的跟踪栈信息并输出到控制台。
+
+​            *包含了异常的类型,异常的原因,还包括异常出现的位置,在开发和调试阶段,都得使用printStackTrace。*
+
+在开发中呢也可以在catch将编译期异常转换成运行期异常处理。
+
+多个异常使用捕获又该如何处理呢？
+
+1. 多个异常分别处理。
+2. 多个异常一次捕获，多次处理。
+3. 多个异常一次捕获一次处理。
+
+一般我们是使用一次捕获多次处理方式，格式如下：
+
+```java
+try{
+     编写可能会出现异常的代码
+}catch(异常类型A  e){  当try中出现A类型异常,就用该catch来捕获.
+     处理异常的代码
+     //记录日志/打印异常信息/继续抛出异常
+}catch(异常类型B  e){  当try中出现B类型异常,就用该catch来捕获.
+     处理异常的代码
+     //记录日志/打印异常信息/继续抛出异常
+}
+```
+
+> 注意:这种异常处理方式，要求多个catch中的异常不能相同，并且若catch中的多个异常之间有子父类异常的关系，那么子类异常要求在上面的catch处理，父类异常在下面的catch处理。
+
+### finally代码块
+
+**finally**：有一些特定的代码无论异常是否发生，都需要执行。另外，因为异常会引发程序跳转，导致有些语句执行不到。而finally就是解决这个问题的，在finally代码块中存放的代码都是一定会被执行的。
+
+什么时候的代码必须最终执行？
+
+当我们在try语句块中打开了一些物理资源(磁盘文件/网络连接/数据库连接等),我们都得在使用完之后,最终关闭打开的资源。
+
+finally的语法:
+
+ try...catch....finally:自身需要处理异常,最终还得关闭资源。
+
+> 注意:finally不能单独使用。
+
+比如在我们之后学习的IO流中，当打开了一个关联文件的资源，最后程序不管结果如何，都需要把这个资源关闭掉。
+
+当只有在try或者catch中调用退出JVM的相关方法,此时finally才不会执行,否则finally永远会执行。
+
+### 注意事项
+
+* 运行时异常被抛出可以不处理。即不捕获也不声明抛出。
+* 如果父类抛出了多个异常,子类覆盖父类方法时,只能抛出相同的异常或者是他的子集。
+* 父类方法没有抛出异常，子类覆盖父类该方法时也不可抛出异常。此时子类产生该异常，只能捕获处理，不能声明抛出
+* 当多异常处理时，捕获处理，前边的类不能是后边类的父类
+* 在try/catch后可以追加finally代码块，其中的代码一定会被执行，通常用于资源回收。
+
+### 自定义异常
+
+**为什么需要自定义异常类:**
+
+我们说了Java中不同的异常类,分别表示着某一种具体的异常情况,那么在开发中总是有些异常情况是SUN没有定义好的,此时我们根据自己业务的异常情况来定义异常类。,例如年龄负数问题,考试成绩负数问题。
+
+在上述代码中，发现这些异常都是JDK内部定义好的，但是实际开发中也会出现很多异常,这些异常很可能在JDK中没有定义过,例如年龄负数问题,考试成绩负数问题.那么能不能自己定义异常呢？
+
+**什么是自定义异常类:**
+
+在开发中根据自己业务的异常情况来定义异常类.
+
+自定义一个业务逻辑异常: **LoginException**。一个登陆异常类。
+
+**异常类如何定义:**
+
+1. 自定义一个编译期异常: 自定义类 并继承于`java.lang.Exception`。
+2. 自定义一个运行时期的异常类:自定义类 并继承于`java.lang.RuntimeException`。
+
+自定义一个登录异常类
+
+```java
+// 业务逻辑异常
+public class LoginException extends Exception {
+    /**
+     * 空参构造
+     */
+    public LoginException() {
+    }
+
+    /**
+     *
+     * @param message 表示异常提示
+     */
+    public LoginException(String message) {
+        super(message);
+    }
+}
+```
+
