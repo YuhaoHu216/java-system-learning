@@ -3630,3 +3630,59 @@ public class LoginException extends Exception {
 
 ## 16.File类
 
+`java.io.File` 类是文件和目录路径名的抽象表示，主要用于文件和目录的创建、查找和删除等操作
+
+- `public File(String pathname) ` ：通过将给定的**路径名字符串**转换为抽象路径名来创建新的 File实例。  
+- `public File(String parent, String child) ` ：从**父路径名字符串和子路径名字符串**创建新的 File实例。
+- `public File(File parent, String child)` ：从**父抽象路径名和子路径名字符串**创建新的 File实例。  
+- 构造举例，代码如下：
+
+```java
+// 文件路径名
+String pathname = "D:\\aaa.txt";
+File file1 = new File(pathname); 
+
+// 文件路径名
+String pathname2 = "D:\\aaa\\bbb.txt";
+File file2 = new File(pathname2); 
+
+// 通过父路径和子路径字符串
+ String parent = "d:\\aaa";
+ String child = "bbb.txt";
+ File file3 = new File(parent, child);
+
+// 通过父级File对象和子路径字符串
+File parentDir = new File("d:\\aaa");
+String child = "bbb.txt";
+File file4 = new File(parentDir, child);
+```
+
+### 常用方法
+
+- `public String getAbsolutePath() ` ：返回此File的绝对路径名字符串。
+
+- ` public String getPath() ` ：将此File转换为路径名字符串。 
+
+- `public String getName()`  ：返回由此File表示的文件或目录的名称。  
+
+- `public long length()`  ：返回由此File表示的文件的长度。 
+
+API中说明：length()，表示文件的长度。但是File对象表示目录，则返回值未指定。
+
+### 判断功能的方法
+
+- `public boolean exists()` ：此File表示的文件或目录是否实际存在。
+- `public boolean isDirectory()` ：此File表示的是否为目录。
+- `public boolean isFile()` ：此File表示的是否为文件。
+
+### 创建删除功能的方法
+
+- `public boolean createNewFile()` ：当且仅当具有该名称的文件尚不存在时，创建一个新的空文件。 
+- `public boolean delete()` ：删除由此File表示的文件或目录。  
+- `public boolean mkdir()` ：创建由此File表示的目录。
+- `public boolean mkdirs()` ：创建由此File表示的目录，包括任何必需但不存在的父目录。、
+
+### 遍历
+
+- `public String[] list()` ：返回一个String数组，表示该File目录中的所有子文件或目录。
+- `public File[] listFiles()` ：返回一个File数组，表示该File目录中的所有的子文件或目录。  
