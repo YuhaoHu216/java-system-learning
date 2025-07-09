@@ -1,0 +1,31 @@
+# 操作系统相关
+.DS_Store
+Thumbs.db
+
+# 日志文件
+*.log
+
+# 编译生成文件
+
+*.gitignore
+Target/
+*.class
+*.o
+*.exe
+
+# 临时文件
+*.tmp
+*.swp
+*.bak
+
+# 依赖目录
+
+
+# IDE文件
+.vscode/
+.idea/
+*.iml
+
+# 环境配置
+.env
+.env.*
