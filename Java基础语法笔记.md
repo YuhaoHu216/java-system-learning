@@ -4483,5 +4483,761 @@ BufferedWriter bw = new BufferedWriter(new FileWriter("bw.txt"));
 
 ### 序列化
 
+序列化:将对象转化为字节序列
+
+反序列化:将字节序列转化为对象
+
+`java.io.ObjectOutputStream ` 类，将Java对象的原始数据类型写出到文件,实现对象的持久存储。
+
+* `public ObjectOutputStream(OutputStream out) `： 创建一个指定OutputStream的ObjectOutputStream。
+
+构造举例，代码如下：  
+
+```java
+FileOutputStream fileOut = new FileOutputStream("employee.txt");
+ObjectOutputStream out = new ObjectOutputStream(fileOut);
+```
+
+**序列化操作**
+
+1. 一个对象要想序列化，必须满足两个条件:
+
+* 该类必须实现`java.io.Serializable ` 接口，`Serializable` 是一个标记接口，不实现此接口的类将不会使任何状态序列化或反序列化，会抛出`NotSerializableException` 。
+* 该类的所有属性必须是可序列化的。如果有一个属性不需要可序列化的，则该属性必须注明是瞬态的，使用`transient` 关键字修饰。
+
+```java
+public class Employee implements java.io.Serializable {
+    public String name;
+    public String address;
+    public transient int age; // transient瞬态修饰成员,不会被序列化
+    public void addressCheck() {
+      	System.out.println("Address  check : " + name + " -- " + address);
+    }
+}
+```
+
+2.写出对象方法
+
+* `public final void writeObject (Object obj)` : 将指定的对象写出。
+
+```java
+public class SerializeDemo{
+   	public static void main(String [] args)   {
+    	Employee e = new Employee();
+    	e.name = "zhangsan";
+    	e.address = "beiqinglu";
+    	e.age = 20; 
+    	try {
+      		// 创建序列化流对象
+          ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("employee.txt"));
+        	// 写出对象
+        	out.writeObject(e);
+        	// 释放资源
+        	out.close();
+        	fileOut.close();
+        	System.out.println("Serialized data is saved"); // 姓名，地址被序列化，年龄没有被序列化。
+        } catch(IOException i)   {
+            i.printStackTrace();
+        }
+   	}
+}
+输出结果：
+Serialized data is saved
+```
+
+**反序列化**
+
+ObjectInputStream反序列化流，将之前使用ObjectOutputStream序列化的原始数据恢复为对象
+
+`public ObjectInputStream(InputStream in) `： 创建一个指定InputStream的ObjectInputStream。
+
+**操作1**
+
+如果能找到一个对象的class文件，我们可以进行反序列化操作，调用`ObjectInputStream`读取对象的方法：
+
+- `public final Object readObject ()` : 读取一个对象。
+
+```java
+public class DeserializeDemo {
+   public static void main(String [] args)   {
+        Employee e = null;
+        try {		
+             // 创建反序列化流
+             FileInputStream fileIn = new FileInputStream("employee.txt");
+             ObjectInputStream in = new ObjectInputStream(fileIn);
+             // 读取一个对象
+             e = (Employee) in.readObject();
+             // 释放资源
+             in.close();
+             fileIn.close();
+        }catch(IOException i) {
+             // 捕获其他异常
+             i.printStackTrace();
+             return;
+        }catch(ClassNotFoundException c)  {
+        	// 捕获类找不到异常
+             System.out.println("Employee class not found");
+             c.printStackTrace();
+             return;
+        }
+        // 无异常,直接打印输出
+        System.out.println("Name: " + e.name);	// zhangsan
+        System.out.println("Address: " + e.address); // beiqinglu
+        System.out.println("age: " + e.age); // 0
+    }
+}
+```
+
+**对于JVM可以反序列化对象，它必须是能够找到class文件的类。如果找不到该类的class文件，则抛出一个 `ClassNotFoundException` 异常。**  
+
+**操作2**
+
+另外，当JVM反序列化对象时，能找到class文件，但是class文件在序列化对象之后发生了修改，那么反序列化操作也会失败，抛出一个`InvalidClassException`异常。**发生这个异常的原因如下：
+
+* 该类的序列版本号与从流中读取的类描述符的版本号不匹配 
+* 该类包含未知数据类型 
+* 该类没有可访问的无参数构造方法 
+
+`Serializable` 接口给需要序列化的类，提供了一个序列版本号。`serialVersionUID` 该版本号的目的在于验证序列化的对象和对应类是否版本匹配。
+
+```java
+public class Employee implements java.io.Serializable {
+     // 加入序列版本号
+     private static final long serialVersionUID = 1L;
+     public String name;
+     public String address;
+     // 添加新的属性 ,重新编译, 可以反序列化,该属性赋为默认值.
+     public int eid; 
+
+     public void addressCheck() {
+         System.out.println("Address  check : " + name + " -- " + address);
+     }
+}
+```
+
+
+
 ### 打印流
 
+平时我们在控制台打印输出，是调用`print`方法和`println`方法完成的，这两个方法都来自于`java.io.PrintStream`类，该类能够方便地打印各种数据类型的值，是一种便捷的输出方式。
+
+* `public PrintStream(String fileName)  `： 使用指定的文件名创建一个新的打印流。
+
+构造举例，代码如下：  
+
+```java
+PrintStream ps = new PrintStream("ps.txt")；
+```
+
+### 改变打印流向
+
+`System.out`就是`PrintStream`类型的，只不过它的流向是系统规定的，打印在控制台上。不过，既然是流对象，我们就可以玩一个"小把戏"，改变它的流向。
+
+```java
+public class PrintDemo {
+    public static void main(String[] args) throws IOException {
+		// 调用系统的打印流,控制台直接输出97
+        System.out.println(97);
+      
+		// 创建打印流,指定文件的名称
+        PrintStream ps = new PrintStream("ps.txt");
+      	
+      	// 设置系统的打印流流向,输出到ps.txt
+        System.setOut(ps);
+      	// 调用系统的打印流,ps.txt中输出97
+        System.out.println(97);
+    }
+}
+```
+
+### 压缩流和解压缩流
+
+压缩流：
+
+​	负责压缩文件或者文件夹
+
+解压缩流：
+
+​	负责把压缩包中的文件和文件夹解压出来
+
+### 工具包(Commons-io)
+
+### 工具包(hutool)
+
+## 18.多线程
+
+是指从软件或者硬件上实现多个线程并发执行的技术。
+
+### 并发和并行
+
+并发:同一时刻有多个指令在多个CPU上同时执行
+
+并发:同一时刻有多个指令在一个CPU上交替执行
+
+### 进程和线程
+
+- 进程：是正在运行的程序
+
+  独立性：进程是一个能独立运行的基本单位，同时也是系统分配资源和调度的独立单位
+  动态性：进程的实质是程序的一次执行过程，进程是动态产生，动态消亡的
+  并发性：任何进程都可以同其他进程一起并发执行
+
+- 线程：是进程中的单个顺序控制流，是一条执行路径
+
+  ​	单线程：一个进程如果只有一条执行路径，则称为单线程程序
+
+  ​	多线程：一个进程如果有多条执行路径，则称为多线程程序
+
+### 多线程实现方式1:继承Thread类
+
+| 方法名       | 说明                                        |
+| ------------ | ------------------------------------------- |
+| void run()   | 在线程开启后，此方法将被调用执行            |
+| void start() | 使此线程开始执行，Java虚拟机会调用run方法() |
+
+- 实现步骤
+
+  - 定义一个类MyThread继承Thread类
+  - 在MyThread类中重写run()方法
+  - 创建MyThread类的对象
+  - 启动线程
+
+- 代码演示
+
+  ```java
+  public class MyThread extends Thread {
+      @Override
+      public void run() {
+          for(int i=0; i<100; i++) {
+              System.out.println(i);
+          }
+      }
+  }
+  public class MyThreadDemo {
+      public static void main(String[] args) {
+          MyThread my1 = new MyThread();
+          MyThread my2 = new MyThread();
+  
+  //        my1.run();
+  //        my2.run();
+  
+          //void start() 导致此线程开始执行; Java虚拟机调用此线程的run方法
+          my1.start();
+          my2.start();
+      }
+  }
+  ```
+
+
+问题:
+
+- 为什么要重写run()方法？
+
+  因为run()是用来封装被线程执行的代码
+
+- run()方法和start()方法的区别？
+
+  run()：封装线程执行的代码，直接调用，相当于普通方法的调用
+
+  start()：启动线程；然后由JVM调用此线程的run()方法
+
+### 实现多线程方式2:实现Runnable接口
+
+- Thread构造方法
+
+  | 方法名                               | 说明                   |
+  | ------------------------------------ | ---------------------- |
+  | Thread(Runnable target)              | 分配一个新的Thread对象 |
+  | Thread(Runnable target, String name) | 分配一个新的Thread对象 |
+
+- 实现步骤
+
+  - 定义一个类MyRunnable实现Runnable接口
+  - 在MyRunnable类中重写run()方法
+  - 创建MyRunnable类的对象
+  - 创建Thread类的对象，把MyRunnable对象作为构造方法的参数
+  - 启动线程
+
+- 代码演示
+
+  ```java
+  public class MyRunnable implements Runnable {
+      @Override
+      public void run() {
+          for(int i=0; i<100; i++) {
+              System.out.println(Thread.currentThread().getName()+":"+i);
+          }
+      }
+  }
+  public class MyRunnableDemo {
+      public static void main(String[] args) {
+          //创建MyRunnable类的对象
+          MyRunnable my = new MyRunnable();
+  
+          //创建Thread类的对象，把MyRunnable对象作为构造方法的参数
+          //Thread(Runnable target)
+  //        Thread t1 = new Thread(my);
+  //        Thread t2 = new Thread(my);
+          //Thread(Runnable target, String name)
+          Thread t1 = new Thread(my,"坦克");
+          Thread t2 = new Thread(my,"飞机");
+  
+          //启动线程
+          t1.start();
+          t2.start();
+      }
+  }
+  ```
+
+### 实现多线程方式3:实现Callable接口
+
+| 方法名                           | 说明                                               |
+| -------------------------------- | -------------------------------------------------- |
+| V call()                         | 计算结果，如果无法计算结果，则抛出一个异常         |
+| FutureTask(Callable<V> callable) | 创建一个 FutureTask，一旦运行就执行给定的 Callable |
+| V get()                          | 如有必要，等待计算完成，然后获取其结果             |
+
++ 实现步骤
+
+  + 定义一个类MyCallable实现Callable接口
+  + 在MyCallable类中重写call()方法
+  + 创建MyCallable类的对象
+  + 创建Future的实现类FutureTask对象，把MyCallable对象作为构造方法的参数
+  + 创建Thread类的对象，把FutureTask对象作为构造方法的参数
+  + 启动线程
+  + 再调用get方法，就可以获取线程结束之后的结果。
+
++ 代码演示
+
+  ```java
+  public class MyCallable implements Callable<String> {
+      @Override
+      public String call() throws Exception {
+          for (int i = 0; i < 100; i++) {
+              System.out.println("跟女孩表白" + i);
+          }
+          //返回值就表示线程运行完毕之后的结果
+          return "答应";
+      }
+  }
+  public class Demo {
+      public static void main(String[] args) throws ExecutionException, InterruptedException {
+          //线程开启之后需要执行里面的call方法
+          MyCallable mc = new MyCallable();
+  
+          //Thread t1 = new Thread(mc);
+  
+          //可以获取线程执行完毕之后的结果.也可以作为参数传递给Thread对象
+          FutureTask<String> ft = new FutureTask<>(mc);
+  
+          //创建线程对象
+          Thread t1 = new Thread(ft);
+  
+          String s = ft.get();
+          //开启线程
+          t1.start();
+  
+          //String s = ft.get();
+          System.out.println(s);
+      }
+  }
+  ```
+
++ 三种实现方式的对比
+
+  + 实现Runnable、Callable接口
+    + 好处: 扩展性强，实现该接口的同时还可以继承其他的类
+    + 缺点: 编程相对复杂，不能直接使用Thread类中的方法
+  + 继承Thread类
+    + 好处: 编程比较简单，可以直接使用Thread类中的方法
+    + 缺点: 可以扩展性较差，不能再继承其他的类
+
+### 设置和获取线程名称
+
+| 方法名                     | 说明                               |
+| -------------------------- | ---------------------------------- |
+| void  setName(String name) | 将此线程的名称更改为等于参数name   |
+| String  getName()          | 返回此线程的名称                   |
+| Thread  currentThread()    | 返回对当前正在执行的线程对象的引用 |
+
+### 线程休眠
+
+| 方法名                         | 说明                                             |
+| ------------------------------ | ------------------------------------------------ |
+| static void sleep(long millis) | 使当前正在执行的线程停留（暂停执行）指定的毫秒数 |
+
++ 代码演示
+
+  ```java
+  public class MyRunnable implements Runnable {
+      @Override
+      public void run() {
+          for (int i = 0; i < 100; i++) {
+              try {
+                  Thread.sleep(100);
+              } catch (InterruptedException e) {
+                  e.printStackTrace();
+              }
+  
+              System.out.println(Thread.currentThread().getName() + "---" + i);
+          }
+      }
+  }
+  public class Demo {
+      public static void main(String[] args) throws InterruptedException {
+          /*System.out.println("睡觉前");
+          Thread.sleep(3000);
+          System.out.println("睡醒了");*/
+  
+          MyRunnable mr = new MyRunnable();
+  
+          Thread t1 = new Thread(mr);
+          Thread t2 = new Thread(mr);
+  
+          t1.start();
+          t2.start();
+      }
+  }
+  ```
+
+### 线程优先级
+
+线程调度
+
+- 两种调度方式
+
+  - 分时调度模型：所有线程轮流使用 CPU 的使用权，平均分配每个线程占用 CPU 的时间片
+  - 抢占式调度模型：优先让优先级高的线程使用 CPU，如果线程的优先级相同，那么会随机选择一个，优先级高的线程获取的 CPU 时间片相对多一些
+
+- Java使用的是抢占式调度模型
+
+- 随机性
+
+  假如计算机只有一个 CPU，那么 CPU 在某一个时刻只能执行一条指令，线程只有得到CPU时间片，也就是使用权，才可以执行指令。所以说多线程程序的执行是有随机性，因为谁抢到CPU的使用权是不一定的
+
+| 方法名                                  | 说明                                                         |
+| --------------------------------------- | ------------------------------------------------------------ |
+| final int getPriority()                 | 返回此线程的优先级                                           |
+| final void setPriority(int newPriority) | 更改此线程的优先级线程默认优先级是5；线程优先级的范围是：1-10 |
+
+`void setDaemon(Boolean on)` 将该线程标记为守护线程,当运行的都是守护线程时,Java虚拟机将退出.一般和普通线程共存,当普通线程执行完毕后.剩下守护线程让JVM退出
+
+### 线程同步
+
+有时候多线程会出现安全问题,比如买票出现相同的票或者负数的票
+
+- 安全问题出现的条件
+
+  - 是多线程环境
+
+  - 有共享数据
+
+  - 有多条语句操作共享数据
+
+- 如何解决多线程安全问题呢?
+
+  - 基本思想：让程序没有安全问题的环境
+
+- 怎么实现呢?
+
+  - 把多条语句操作共享数据的代码给锁起来，让任意时刻只能有一个线程执行即可
+  - Java提供了同步代码块的方式来解决
+
+
+#### 同步代码块解决数据安全问题
+
+- 同步代码块格式：
+
+  ```java
+  synchronized(任意对象) { 
+  	多条语句操作共享数据的代码 
+  }
+  ```
+
+  synchronized(任意对象)：就相当于给代码加锁了，任意对象就可以看成是一把锁
+
+- 同步的好处和弊端  
+
+  - 好处：解决了多线程的数据安全问题
+  - 弊端：当线程很多时，因为每个线程都会去判断同步上的锁，这是很耗费资源的，无形中会降低程序的运行效率
+
+```java
+public class SellTicket implements Runnable {
+    private int tickets = 100;
+    private Object obj = new Object();
+
+    @Override
+    public void run() {
+        while (true) {
+            synchronized (obj) { // 对可能有安全问题的代码加锁,多个线程必须使用同一把锁
+                //t1进来后，就会把这段代码给锁起来
+                if (tickets > 0) {
+                    try {
+                        Thread.sleep(100);
+                        //t1休息100毫秒
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    //窗口1正在出售第100张票
+                    System.out.println(Thread.currentThread().getName() + "正在出售第" + tickets + "张票");
+                    tickets--; //tickets = 99;
+                }
+            }
+            //t1出来了，这段代码的锁就被释放了
+        }
+    }
+}
+
+public class SellTicketDemo {
+    public static void main(String[] args) {
+        SellTicket st = new SellTicket();
+
+        Thread t1 = new Thread(st, "窗口1");
+        Thread t2 = new Thread(st, "窗口2");
+        Thread t3 = new Thread(st, "窗口3");
+
+        t1.start();
+        t2.start();
+        t3.start();
+    }
+}
+```
+
+#### 同步方法解决数据安全问题
+
+- 同步方法的格式
+
+  同步方法：就是把synchronized关键字加到方法上
+
+  ```java
+  修饰符 synchronized 返回值类型 方法名(方法参数) { 
+  	方法体；
+  }
+  ```
+
+  同步方法的锁对象是什么呢?
+
+  ​	this
+
+- 静态同步方法
+
+  同步静态方法：就是把synchronized关键字加到静态方法上
+
+  ```java
+  修饰符 static synchronized 返回值类型 方法名(方法参数) { 
+  	方法体；
+  }
+  ```
+
+  同步静态方法的锁对象是什么呢?
+
+  ​	类名.class
+
+```java
+public class MyRunnable implements Runnable {
+    private static int ticketCount = 100;
+
+    @Override
+    public void run() {
+        while(true){
+            if("窗口一".equals(Thread.currentThread().getName())){
+                //同步方法
+                boolean result = synchronizedMthod();
+                if(result){
+                    break;
+                }
+            }
+
+            if("窗口二".equals(Thread.currentThread().getName())){
+                //同步代码块
+                synchronized (MyRunnable.class){
+                    if(ticketCount == 0){
+                       break;
+                    }else{
+                        try {
+                            Thread.sleep(10);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        ticketCount--;
+                        System.out.println(Thread.currentThread().getName() + "在卖票,还剩下" + ticketCount + "张票");
+                    }
+                }
+            }
+
+        }
+    }
+
+    private static synchronized boolean synchronizedMthod() {
+        if(ticketCount == 0){
+            return true;
+        }else{
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            ticketCount--;
+            System.out.println(Thread.currentThread().getName() + "在卖票,还剩下" + ticketCount + "张票");
+            return false;
+        }
+    }
+}
+```
+
+```java
+  public class Demo {
+      public static void main(String[] args) {
+          MyRunnable mr = new MyRunnable();
+
+          Thread t1 = new Thread(mr);
+          Thread t2 = new Thread(mr);
+    
+          t1.setName("窗口一");
+          t2.setName("窗口二");
+    
+          t1.start();
+          t2.start();
+      }
+
+  }
+```
+
+#### Lock锁
+
+虽然我们可以理解同步代码块和同步方法的锁对象问题，但是我们并没有直接看到在哪里加上了锁，在哪里释放了锁，为了更清晰的表达如何加锁和释放锁，JDK5以后提供了一个新的锁对象Lock
+
+Lock是接口不能直接实例化，这里采用它的实现类ReentrantLock来实例化
+
+- ReentrantLock构造方法
+
+  | 方法名          | 说明                        |
+  | --------------- | --------------------------- |
+  | ReentrantLock() | 创建一个ReentrantLock的实例 |
+
+- 加锁解锁方法
+
+  | 方法名        | 说明   |
+  | ------------- | ------ |
+  | void lock()   | 获得锁 |
+  | void unlock() | 释放锁 |
+
+  ```java
+  public class Ticket implements Runnable {
+      //票的数量
+      private int ticket = 100;
+      private Object obj = new Object();
+      private ReentrantLock lock = new ReentrantLock();
+
+      @Override
+      public void run() {
+          while (true) {
+              //synchronized (obj){//多个线程必须使用同一把锁.
+              try {
+                  lock.lock();
+                  if (ticket <= 0) {
+                      //卖完了
+                      break;
+                  } else {
+                      Thread.sleep(100);
+                      ticket--;
+                      System.out.println(Thread.currentThread().getName() + "在卖票,还剩下" + ticket + "张票");
+                  }
+              } catch (InterruptedException e) {
+                  e.printStackTrace();
+              } finally {
+                  lock.unlock();
+              }
+              // }
+          }
+      }
+  }
+
+  public class Demo {
+      public static void main(String[] args) {
+          Ticket ticket = new Ticket();
+
+          Thread t1 = new Thread(ticket);
+          Thread t2 = new Thread(ticket);
+          Thread t3 = new Thread(ticket);
+
+          t1.setName("窗口一");
+          t2.setName("窗口二");
+          t3.setName("窗口三");
+
+          t1.start();
+          t2.start();
+          t3.start();
+      }
+  }
+  ```
+
+#### 死锁
+
++ 线程死锁是指由于两个或者多个线程互相持有对方所需要的资源，导致这些线程处于等待状态，无法前往执行
+
++ 什么情况下会产生死锁
+
+  1. 资源有限
+  2. 同步嵌套
+
+```java
+public class Demo {
+    public static void main(String[] args) {
+        Object objA = new Object();
+        Object objB = new Object();
+
+        new Thread(()->{
+            while(true){
+                synchronized (objA){
+                    //线程一
+                    synchronized (objB){
+                        System.out.println("小康同学正在走路");
+                    }
+                }
+            }
+        }).start();
+
+        new Thread(()->{
+            while(true){
+                synchronized (objB){
+                    //线程二
+                    synchronized (objA){
+                        System.out.println("小薇同学正在走路");
+                    }
+                }
+            }
+        }).start();
+    }
+}
+```
+
+### 生产者消费者
+
+- 概述
+
+  生产者消费者模式是一个十分经典的多线程协作的模式，弄懂生产者消费者问题能够让我们对多线程编程的理解更加深刻。
+
+  所谓生产者消费者问题，实际上主要是包含了两类线程：
+
+  ​	一类是生产者线程用于生产数据
+
+  ​	一类是消费者线程用于消费数据
+
+  为了解耦生产者和消费者的关系，通常会采用共享的数据区域，就像是一个仓库
+
+  生产者生产数据之后直接放置在共享数据区中，并不需要关心消费者的行为
+
+  消费者只需要从共享数据区中去获取数据，并不需要关心生产者的行为
+
+- Object类的等待和唤醒方法
+
+  | 方法名           | 说明                                                         |
+  | ---------------- | ------------------------------------------------------------ |
+  | void wait()      | 导致当前线程等待，直到另一个线程调用该对象的 notify()方法或 notifyAll()方法 |
+  | void notify()    | 唤醒正在等待对象监视器的单个线程                             |
+  | void notifyAll() | 唤醒正在等待对象监视器的所有线程                             |
+
+#### 阻塞队列
+
+#### 阻塞队列实现等待唤醒机制
