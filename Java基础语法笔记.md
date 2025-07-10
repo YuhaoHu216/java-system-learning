@@ -5241,3 +5241,587 @@ public class Demo {
 #### 阻塞队列
 
 #### 阻塞队列实现等待唤醒机制
+
+### 线程池
+
+线程状态
+
+| 线程状态      | 具体含义                                                     |
+| ------------- | ------------------------------------------------------------ |
+| NEW           | 一个尚未启动的线程的状态。也称之为初始状态、开始状态。线程刚被创建，但是并未启动。还没调用start方法。MyThread t = new MyThread()只有线程象，没有线程特征。 |
+| RUNNABLE      | 当我们调用线程对象的start方法，那么此时线程对象进入了RUNNABLE状态。那么此时才是真正的在JVM进程中创建了一个线程，线程一经启动并不是立即得到执行，线程的运行与否要听令与CPU的调度，那么我们把这个中间状态称之为可执行状态(RUNNABLE)也就是说它具备执行的资格，但是并没有真正的执行起来而是在等待CPU的度。 |
+| BLOCKED       | 当一个线程试图获取一个对象锁，而该对象锁被其他的线程持有，则该线程进入Blocked状态；当该线程持有锁时，该线程将变成Runnable状态。 |
+| WAITING       | 一个正在等待的线程的状态。也称之为等待状态。造成线程等待的原因有两种，分别是调用Object.wait()、join()方法。处于等待状态的线程，正在等待其他线程去执行一个特定的操作。例如：因为wait()而等待的线程正在等待另一个线程去调用notify()或notifyAll()；一个因为join()而等待的线程正在等待另一个线程结束。 |
+| TIMED_WAITING | 一个在限定时间内等待的线程的状态。也称之为限时等待状态。造成线程限时等待状态的原因有三种，分别是：Thread.sleep(long)，Object.wait(long)、join(long)。 |
+| TERMINATED    | 一个完全运行完成的线程的状态。也称之为终止状态、结束状态     |
+
+线程池存在的意义：
+
+​	系统创建一个线程的成本是比较高的，因为它涉及到与操作系统交互，当程序中需要创建大量生存期很短暂的线程时，频繁的创建和销毁线程对系统的资源消耗有可能大于业务处理是对系
+
+​	统资源的消耗，这样就有点"舍本逐末"了。针对这一种情况，为了提高性能，我们就可以采用线程池。线程池在启动的时，会创建大量空闲线程，当我们向线程池提交任务的时，线程池就
+
+​	会启动一个线程来执行该任务。等待任务执行完毕以后，线程并不会死亡，而是再次返回到线程池中称为空闲状态。等待下一次任务的执行。
+
+**线程池的设计思路 :**
+
+1. 准备一个任务容器
+2. 一次性启动多个(2个)消费者线程
+3. 刚开始任务容器是空的，所以线程都在wait
+4. 直到一个外部线程向这个任务容器中扔了一个"任务"，就会有一个消费者线程被唤醒
+5. 这个消费者线程取出"任务"，并且执行这个任务，执行完毕后，继续等待下一次任务的到来
+
+#### Executors默认线程池
+
+我们可以使用Executors中所提供的**静态**方法来创建线程池
+
+​	static ExecutorService newCachedThreadPool()   创建一个默认的线程池
+​	static newFixedThreadPool(int nThreads)	    创建一个指定最多线程数量的线程池
+
+**代码实现 :** 
+
+```java
+package com.itheima.mythreadpool;
+
+
+//static ExecutorService newCachedThreadPool()   创建一个默认的线程池
+//static newFixedThreadPool(int nThreads)	    创建一个指定最多线程数量的线程池
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class MyThreadPoolDemo {
+    public static void main(String[] args) throws InterruptedException {
+
+        //1,创建一个默认的线程池对象.池子中默认是空的.默认最多可以容纳int类型的最大值.
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        //Executors --- 可以帮助我们创建线程池对象
+        //ExecutorService --- 可以帮助我们控制线程池
+
+        executorService.submit(()->{
+            System.out.println(Thread.currentThread().getName() + "在执行了");
+        });
+
+        //Thread.sleep(2000);
+
+        executorService.submit(()->{
+            System.out.println(Thread.currentThread().getName() + "在执行了");
+        });
+
+        executorService.shutdown();
+    }
+}
+
+```
+
+#### Executors创建指定上限的线程池
+
+**使用Executors中所提供的静态方法来创建线程池**
+
+​	static ExecutorService newFixedThreadPool(int nThreads) : 创建一个指定最多线程数量的线程池
+
+**代码实现 :** 
+
+```java
+package com.itheima.mythreadpool;
+
+//static ExecutorService newFixedThreadPool(int nThreads)
+//创建一个指定最多线程数量的线程池
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+
+public class MyThreadPoolDemo2 {
+    public static void main(String[] args) {
+        //参数不是初始值而是最大值
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+
+        ThreadPoolExecutor pool = (ThreadPoolExecutor) executorService;
+        System.out.println(pool.getPoolSize());//0
+
+        executorService.submit(()->{
+            System.out.println(Thread.currentThread().getName() + "在执行了");
+        });
+
+        executorService.submit(()->{
+            System.out.println(Thread.currentThread().getName() + "在执行了");
+        });
+
+        System.out.println(pool.getPoolSize());//2
+//        executorService.shutdown();
+    }
+}
+
+```
+
+#### 线程池-TreadPoolExcutor
+
+**创建线程池对象 :** 
+
+ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(核心线程数量,最大线程数量,空闲线程最大存活时间,任务队列,创建线程工厂,任务的拒绝策略);
+
+**代码实现 :** 
+
+```java
+package com.itheima.mythreadpool;
+
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+public class MyThreadPoolDemo3 {
+//    参数一：核心线程数量
+//    参数二：最大线程数
+//    参数三：空闲线程最大存活时间
+//    参数四：时间单位
+//    参数五：任务队列
+//    参数六：创建线程工厂
+//    参数七：任务的拒绝策略
+    public static void main(String[] args) {
+        ThreadPoolExecutor pool = new ThreadPoolExecutor(2,5,2,TimeUnit.SECONDS,new ArrayBlockingQueue<>(10), Executors.defaultThreadFactory(),new ThreadPoolExecutor.AbortPolicy());
+        pool.submit(new MyRunnable());
+        pool.submit(new MyRunnable());
+
+        pool.shutdown();
+    }
+}
+```
+
+#### 线程池详细参数
+
+```java
+public ThreadPoolExecutor(int corePoolSize,
+                              int maximumPoolSize,
+                              long keepAliveTime,
+                              TimeUnit unit,
+                              BlockingQueue<Runnable> workQueue,
+                              ThreadFactory threadFactory,
+                              RejectedExecutionHandler handler)
+    
+corePoolSize：   核心线程的最大值，不能小于0
+maximumPoolSize：最大线程数，不能小于等于0，maximumPoolSize >= corePoolSize
+keepAliveTime：  空闲线程最大存活时间,不能小于0
+unit：           时间单位
+workQueue：      任务队列，不能为null
+threadFactory：  创建线程工厂,不能为null      
+handler：        任务的拒绝策略,不能为null  
+```
+
+#### 线程池非默认任务的拒绝策略
+
+RejectedExecutionHandler是jdk提供的一个任务拒绝策略接口，它下面存在4个子类。
+
+```java
+ThreadPoolExecutor.AbortPolicy: 		    丢弃任务并抛出RejectedExecutionException异常。是默认的策略。
+ThreadPoolExecutor.DiscardPolicy： 		   丢弃任务，但是不抛出异常 这是不推荐的做法。
+ThreadPoolExecutor.DiscardOldestPolicy：    抛弃队列中等待最久的任务 然后把当前任务加入队列中。
+ThreadPoolExecutor.CallerRunsPolicy:        调用任务的run()方法绕过线程池直接执行。
+```
+
+注：明确线程池对多可执行的任务数 = 队列容量 + 最大线程数
+
+### 原子性
+
+#### volatile问题
+
+当线程A修改的共享数据,但是B线程没有及时获取到最新的值,如果还在使用原先的值就会出现问题.
+
+1，堆内存是唯一的，每一个线程都有自己的线程栈。
+
+​	2 ，每一个线程在使用堆里面变量的时候，都会先拷贝一份到变量的副本中。
+
+​	3 ，在线程中，每一次使用是从变量的副本中获取的。
+
+**用volatile**关键字解决
+
+**Volatile关键字 :** 强制线程每次在使用的时候，都会看一下共享区域最新的值
+
+**代码实现 :** **使用volatile关键字解决**
+
+```java
+package com.itheima.myvolatile;
+
+public class Demo {
+    public static void main(String[] args) {
+        MyThread1 t1 = new MyThread1();
+        t1.setName("小路同学");
+        t1.start();
+
+        MyThread2 t2 = new MyThread2();
+        t2.setName("小皮同学");
+        t2.start();
+    }
+}
+```
+
+```java
+package com.itheima.myvolatile;
+
+public class Money {
+    public static volatile int money = 100000;
+}
+```
+
+```java
+package com.itheima.myvolatile;
+
+public class MyThread1 extends  Thread {
+    @Override
+    public void run() {
+        while(Money.money == 100000){
+
+        }
+
+        System.out.println("结婚基金已经不是十万了");
+    }
+}
+
+```
+
+```java
+package com.itheima.myvolatile;
+
+public class MyThread2 extends Thread {
+    @Override
+    public void run() {
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        Money.money = 90000;
+    }
+}
+
+```
+
+**synchronized解决**
+
+​	1 ，线程获得锁
+
+​	2 ，清空变量副本
+
+​	3 ，拷贝共享变量最新的值到变量副本中
+
+​	4 ，执行代码
+
+​	5 ，将修改后变量副本中的值赋值给共享数据
+
+​	6 ，释放锁
+
+**代码实现 :** 
+
+```java
+package com.itheima.myvolatile2;
+
+public class Demo {
+    public static void main(String[] args) {
+        MyThread1 t1 = new MyThread1();
+        t1.setName("小路同学");
+        t1.start();
+
+        MyThread2 t2 = new MyThread2();
+        t2.setName("小皮同学");
+        t2.start();
+    }
+}
+```
+
+```java
+package com.itheima.myvolatile2;
+
+public class Money {
+    public static Object lock = new Object();
+    public static volatile int money = 100000;
+}
+```
+
+```java
+package com.itheima.myvolatile2;
+
+public class MyThread1 extends  Thread {
+    @Override
+    public void run() {
+        while(true){
+            synchronized (Money.lock){
+                if(Money.money != 100000){
+                    System.out.println("结婚基金已经不是十万了");
+                    break;
+                }
+            }
+        }
+    }
+}
+```
+
+```java
+package com.itheima.myvolatile2;
+
+public class MyThread2 extends Thread {
+    @Override
+    public void run() {
+        synchronized (Money.lock) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            Money.money = 90000;
+        }
+    }
+}
+```
+
+#### 原子性
+
+**概述 :** 所谓的原子性是指在一次操作或者多次操作中，要么所有的操作全部都得到了执行并且不会受到任何因素的干扰而中断，要么所有的操作都不执行，多个操作是一个不可以分割的整体。
+
+**代码实现 :** 
+
+```java
+package com.itheima.threadatom;
+
+public class AtomDemo {
+    public static void main(String[] args) {
+        MyAtomThread atom = new MyAtomThread();
+
+        for (int i = 0; i < 100; i++) {
+            new Thread(atom).start();
+        }
+    }
+}
+class MyAtomThread implements Runnable {
+    private volatile int count = 0; //送冰淇淋的数量
+
+    @Override
+    public void run() {
+        for (int i = 0; i < 100; i++) {
+            //1,从共享数据中读取数据到本线程栈中.
+            //2,修改本线程栈中变量副本的值
+            //3,会把本线程栈中变量副本的值赋值给共享数据.
+            count++;
+            System.out.println("已经送了" + count + "个冰淇淋");
+        }
+    }
+}
+```
+
+**代码总结 :** count++ 不是一个原子性操作, 他在执行的过程中,有可能被其他线程打断
+
+volatile关键字不能保证原子性
+
+解决方案 : 我们可以给count++操作添加锁，那么count++操作就是临界区中的代码，临界区中的代码一次只能被一个线程去执行，所以count++就变成了原子操作。
+
+```java
+package com.itheima.threadatom2;
+
+public class AtomDemo {
+    public static void main(String[] args) {
+        MyAtomThread atom = new MyAtomThread();
+
+        for (int i = 0; i < 100; i++) {
+            new Thread(atom).start();
+        }
+    }
+}
+class MyAtomThread implements Runnable {
+    private volatile int count = 0; //送冰淇淋的数量
+    private Object lock = new Object();
+
+    @Override
+    public void run() {
+        for (int i = 0; i < 100; i++) {
+            //1,从共享数据中读取数据到本线程栈中.
+            //2,修改本线程栈中变量副本的值
+            //3,会把本线程栈中变量副本的值赋值给共享数据.
+            synchronized (lock) {
+                count++;
+                System.out.println("已经送了" + count + "个冰淇淋");
+            }
+        }
+    }
+}
+```
+
+概述：java从JDK1.5开始提供了java.util.concurrent.atomic包(简称Atomic包)，这个包中的原子操作类提供了一种用法简单，性能高效，线程安全地更新一个变量的方式。因为变
+
+量的类型有很多种，所以在Atomic包里一共提供了13个类，属于4种类型的原子更新方式，分别是原子更新基本类型、原子更新数组、原子更新引用和原子更新属性(字段)。本次我们只讲解
+
+使用原子的方式更新基本类型，使用原子的方式更新基本类型Atomic包提供了以下3个类：
+
+AtomicBoolean： 原子更新布尔类型
+
+AtomicInteger：   原子更新整型
+
+AtomicLong：	原子更新长整型
+
+以上3个类提供的方法几乎一模一样，所以本节仅以AtomicInteger为例进行讲解，AtomicInteger的常用方法如下：
+
+```java
+public AtomicInteger()：	   			     初始化一个默认值为0的原子型Integer
+public AtomicInteger(int initialValue)：  初始化一个指定值的原子型Integer
+
+int get():   			 				 获取值
+int getAndIncrement():      			 以原子方式将当前值加1，注意，这里返回的是自增前的值。
+int incrementAndGet():     				 以原子方式将当前值加1，注意，这里返回的是自增后的值。
+int addAndGet(int data):				 以原子方式将输入的数值与实例中的值（AtomicInteger里的value）相加，并返回结果。
+int getAndSet(int value):   			 以原子方式设置为newValue的值，并返回旧值。
+```
+
+内存解析
+
+**AtomicInteger原理 :** 自旋锁  + CAS 算法
+
+**CAS算法：**
+
+​	有3个操作数（内存值V， 旧的预期值A，要修改的值B）
+
+​	当旧的预期值A == 内存值   此时修改成功，将V改为B                 
+
+​	当旧的预期值A！=内存值   此时修改失败，不做任何操作                 
+
+​	并重新获取现在的最新值（这个重新获取的动作就是自旋）
+
+#### 乐观锁和悲观锁
+
+**synchronized和CAS的区别 :** 
+
+**相同点：**在多线程情况下，都可以保证共享数据的安全性。
+
+**不同点：**synchronized总是从最坏的角度出发，认为每次获取数据的时候，别人都有可能修改。所以在每次操作共享数据之前，都会上锁。（悲观锁）
+
+CAS是从乐观的角度出发，假设每次获取数据别人都不会修改，所以不会上锁。只不过在修改共享数据的时候，会检查一下，别人有没有修改过这个数据。
+
+如果别人修改过，那么我再次获取现在最新的值。            
+
+如果别人没有修改过，那么我现在直接修改共享数据的值.(乐观锁）
+
+#### 并发工具类
+
+- **Hashtable**
+
+​	**Hashtable出现的原因 :** 在集合类中HashMap是比较常用的集合对象，但是HashMap是线程不安全的(多线程环境下可能会存在问题)。为了保证数据的安全性我们可以使用Hashtable，但是Hashtable的效率低下。
+
+**代码实现 :** 
+
+```java
+package com.itheima.mymap;
+
+import java.util.HashMap;
+import java.util.Hashtable;
+
+public class MyHashtableDemo {
+    public static void main(String[] args) throws InterruptedException {
+        Hashtable<String, String> hm = new Hashtable<>();
+
+        Thread t1 = new Thread(() -> {
+            for (int i = 0; i < 25; i++) {
+                hm.put(i + "", i + "");
+            }
+        });
+
+
+        Thread t2 = new Thread(() -> {
+            for (int i = 25; i < 51; i++) {
+                hm.put(i + "", i + "");
+            }
+        });
+
+        t1.start();
+        t2.start();
+
+        System.out.println("----------------------------");
+        //为了t1和t2能把数据全部添加完毕
+        Thread.sleep(1000);
+
+        //0-0 1-1 ..... 50- 50
+
+        for (int i = 0; i < 51; i++) {
+            System.out.println(hm.get(i + ""));
+        }//0 1 2 3 .... 50
+
+
+    }
+}
+```
+
+- **ConcurrentHashMap**
+
+  **ConcurrentHashMap出现的原因 :** 在集合类中HashMap是比较常用的集合对象，但是HashMap是线程不安全的(多线程环境下可能会存在问题)。为了保证数据的安全性我们可以使用Hashtable，但是Hashtable的效率低下。
+
+  基于以上两个原因我们可以使用JDK1.5以后所提供的ConcurrentHashMap。
+
+  ​    1 ，HashMap是线程不安全的。多线程环境下会有数据安全问题
+
+  ​	2 ，Hashtable是线程安全的，但是会将整张表锁起来，效率低下
+
+  ​	3，ConcurrentHashMap也是线程安全的，效率较高。     在JDK7和JDK8中，底层原理不一样。
+
+  原理:
+
+  ​	1，如果使用空参构造创建ConcurrentHashMap对象，则什么事情都不做。     在第一次添加元素的时候创建哈希表
+
+  ​	2，计算当前元素应存入的索引。
+
+  ​	3，如果该索引位置为null，则利用cas算法，将本结点添加到数组中。
+
+  ​	4，如果该索引位置不为null，则利用volatile关键字获得当前位置最新的结点地址，挂在他下面，变成链表。		
+
+  ​	5，当链表的长度大于等于8时，自动转换成红黑树6，以链表或者红黑树头结点为锁对象，配合悲观锁保证多线程操作集合时数据的安全性
+
+- **CountDownLatch**
+
+| 方法                             | 解释                             |
+| -------------------------------- | -------------------------------- |
+| public CountDownLatch(int count) | 参数传递线程数，表示等待线程数量 |
+| public void await()              | 让线程等待                       |
+| public void countDown()          | 当前线程执行完毕                 |
+
+**使用场景：** 让某一条线程等待其他线程执行完毕之后再执行
+
+**总结 :** 
+
+​	1. CountDownLatch(int count)：参数写等待线程的数量。并定义了一个计数器。
+
+​	2. await()：让线程等待，当计数器为0时，会唤醒等待的线程
+
+	3. countDown()： 线程执行完毕时调用，会将计数器-1。
+
+
+
+- **Semaphore**
+
+**使用场景 :** 
+
+​	可以控制访问特定资源的线程数量。
+
+**实现步骤 :** 
+
+​	1，需要有人管理这个通道
+
+​	2，当有车进来了，发通行许可证
+
+​	3，当车出去了，收回通行许可证
+
+​	4，如果通行许可证发完了，那么其他车辆只能等着
+
+- **Exchanger**
+
+  Exchanger（交换者）是一个用于线程间协作的工具类。Exchanger用于进行线程间的数据交换。
+
+  举例：比如男女双方结婚的时候，需要进行交换结婚戒指。
+
+  Exchanger常用方法
+
+```java
+public Exchanger()							// 构造方法
+public V exchange(V x)						// 进行交换数据的方法，参数x表示本方数据 ，返回值v表示对方数据
+```
+
+​	这两个线程通过exchange方法交换数据，如果第一个线程先执行exchange()方法，它会一直等待第二	个线程也执行exchange方法，当两个线程都到达同步点时，这两个线程就可以交换数据，
+
+​	将本线程生产出来的数据传递给对方。
