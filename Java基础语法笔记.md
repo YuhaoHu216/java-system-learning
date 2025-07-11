@@ -5933,3 +5933,408 @@ netAddress：此类表示Internet协议（IP）地址
 
 ### UDP通信程序
 
+#### UDP发送数据
+
+- ava中的UDP通信
+
+  - UDP协议是一种不可靠的网络协议，它在通信的两端各建立一个Socket对象，但是这两个Socket只是发送，接收数据的对象，因此对于基于UDP协议的通信双方而言，没有所谓的客户端和服务器的概念
+  - Java提供了DatagramSocket类作为基于UDP协议的Socket
+
+- 构造方法
+
+  | 方法名                                                      | 说明                                                 |
+  | ----------------------------------------------------------- | ---------------------------------------------------- |
+  | DatagramSocket()                                            | 创建数据报套接字并将其绑定到本机地址上的任何可用端口 |
+  | DatagramPacket(byte[] buf,int len,InetAddress add,int port) | 创建数据包,发送长度为len的数据包到指定主机的指定端口 |
+
+- 相关方法
+
+  | 方法名                         | 说明                   |
+  | ------------------------------ | ---------------------- |
+  | void send(DatagramPacket p)    | 发送数据报包           |
+  | void close()                   | 关闭数据报套接字       |
+  | void receive(DatagramPacket p) | 从此套接字接受数据报包 |
+
+- 发送数据的步骤
+
+  - 创建发送端的Socket对象(DatagramSocket)
+  - 创建数据，并把数据打包
+  - 调用DatagramSocket对象的方法发送数据
+  - 关闭发送端
+
+- 代码演示
+
+  ```java
+  public class SendDemo {
+      public static void main(String[] args) throws IOException {
+          //创建发送端的Socket对象(DatagramSocket)
+          // DatagramSocket() 构造数据报套接字并将其绑定到本地主机上的任何可用端口
+          DatagramSocket ds = new DatagramSocket();
+  
+          //创建数据，并把数据打包
+          //DatagramPacket(byte[] buf, int length, InetAddress address, int port)
+          //构造一个数据包，发送长度为 length的数据包到指定主机上的指定端口号。
+          byte[] bys = "hello,udp,我来了".getBytes();
+  
+          DatagramPacket dp = new DatagramPacket(bys,bys.length,InetAddress.getByName("127.0.0.1"),10086);
+  
+          //调用DatagramSocket对象的方法发送数据
+          //void send(DatagramPacket p) 从此套接字发送数据报包
+          ds.send(dp);
+  
+          //关闭发送端
+          //void close() 关闭此数据报套接字
+          ds.close();
+      }
+  }
+  ```
+
+#### UDP接受数据
+
+- 接收数据的步骤
+
+  - 创建接收端的Socket对象(DatagramSocket)
+  - 创建一个数据包，用于接收数据
+  - 调用DatagramSocket对象的方法接收数据
+  - 解析数据包，并把数据在控制台显示
+  - 关闭接收端
+
+- 构造方法
+
+  | 方法名                              | 说明                                            |
+  | ----------------------------------- | ----------------------------------------------- |
+  | DatagramPacket(byte[] buf, int len) | 创建一个DatagramPacket用于接收长度为len的数据包 |
+
+- 相关方法
+
+  | 方法名            | 说明                                     |
+  | ----------------- | ---------------------------------------- |
+  | byte[]  getData() | 返回数据缓冲区                           |
+  | int  getLength()  | 返回要发送的数据的长度或接收的数据的长度 |
+
+- 示例代码
+
+  ```java
+  public class ReceiveDemo {
+      public static void main(String[] args) throws IOException {
+        	//创建接收端的Socket对象(DatagramSocket)
+        	DatagramSocket ds = new DatagramSocket(12345);
+  
+        	//创建一个数据包，用于接收数据
+        	byte[] bys = new byte[1024];
+        	DatagramPacket dp = new DatagramPacket(bys, bys.length);
+  
+        	//调用DatagramSocket对象的方法接收数据
+        	ds.receive(dp);
+  
+        	//解析数据包，并把数据在控制台显示
+        	System.out.println("数据是：" + new String(dp.getData(), 0,                                             dp.getLength()));
+          }
+      }
+  }
+  ```
+
+#### UDP三种通讯方式
+
+- 单播
+
+  单播用于两个主机之间的端对端通信
+
+- 组播
+
+  组播用于对一组特定的主机进行通信
+
+- 广播
+
+  广播用于一个主机对整个局域网上所有主机上的数据通信
+
+**组播实现**
+
+发送端
+
+1. 创建发送端的Socket对象(DatagramSocket)
+2. 创建数据，并把数据打包(DatagramPacket)
+3. 调用DatagramSocket对象的方法发送数据(在单播中,这里是发给指定IP的电脑但是在组播当中,这里是发给组播地址)
+4. 释放资源
+
+接收端
+
+1. 创建接收端Socket对象(MulticastSocket)
+2. 创建一个箱子,用于接收数据
+3. 把当前计算机绑定一个组播地址
+4. 将数据接收到箱子中
+5. 解析数据包,并打印数据
+6. 释放资源
+
+- 代码实现
+
+  ```java
+  // 发送端
+  public class ClinetDemo {
+      public static void main(String[] args) throws IOException {
+          // 1. 创建发送端的Socket对象(DatagramSocket)
+          DatagramSocket ds = new DatagramSocket();
+          String s = "hello 组播";
+          byte[] bytes = s.getBytes();
+          InetAddress address = InetAddress.getByName("224.0.1.0");
+          int port = 10000;
+          // 2. 创建数据，并把数据打包(DatagramPacket)
+          DatagramPacket dp = new DatagramPacket(bytes,bytes.length,address,port);
+          // 3. 调用DatagramSocket对象的方法发送数据(在单播中,这里是发给指定IP的电脑但是在组播当中,这里是发给组播地址)
+          ds.send(dp);
+          // 4. 释放资源
+          ds.close();
+      }
+  }
+  // 接收端
+  public class ServerDemo {
+      public static void main(String[] args) throws IOException {
+          // 1. 创建接收端Socket对象(MulticastSocket)
+          MulticastSocket ms = new MulticastSocket(10000);
+          // 2. 创建一个箱子,用于接收数据
+          DatagramPacket dp = new DatagramPacket(new byte[1024],1024);
+          // 3. 把当前计算机绑定一个组播地址,表示添加到这一组中.
+          ms.joinGroup(InetAddress.getByName("224.0.1.0"));
+          // 4. 将数据接收到箱子中
+          ms.receive(dp);
+          // 5. 解析数据包,并打印数据
+          byte[] data = dp.getData();
+          int length = dp.getLength();
+          System.out.println(new String(data,0,length));
+          // 6. 释放资源
+          ms.close();
+      }
+  }
+  ```
+
+**广播实现**
+
+- 实现步骤
+
+  - 发送端
+    1. 创建发送端Socket对象(DatagramSocket)
+    2. 创建存储数据的箱子,将广播地址封装进去
+    3. 发送数据
+    4. 释放资源
+  - 接收端
+    1. 创建接收端的Socket对象(DatagramSocket)
+    2. 创建一个数据包，用于接收数据
+    3. 调用DatagramSocket对象的方法接收数据
+    4. 解析数据包，并把数据在控制台显示
+    5. 关闭接收端
+
+- 代码实现
+
+  ```java
+  // 发送端
+  public class ClientDemo {
+      public static void main(String[] args) throws IOException {
+        	// 1. 创建发送端Socket对象(DatagramSocket)
+          DatagramSocket ds = new DatagramSocket();
+  		// 2. 创建存储数据的箱子,将广播地址封装进去
+          String s = "广播 hello";
+          byte[] bytes = s.getBytes();
+          InetAddress address = InetAddress.getByName("255.255.255.255");
+          int port = 10000;
+          DatagramPacket dp = new DatagramPacket(bytes,bytes.length,address,port);
+  		// 3. 发送数据
+          ds.send(dp);
+  		// 4. 释放资源
+          ds.close();
+      }
+  }
+  
+  // 接收端
+  public class ServerDemo {
+      public static void main(String[] args) throws IOException {
+          // 1. 创建接收端的Socket对象(DatagramSocket)
+          DatagramSocket ds = new DatagramSocket(10000);
+          // 2. 创建一个数据包，用于接收数据
+          DatagramPacket dp = new DatagramPacket(new byte[1024],1024);
+          // 3. 调用DatagramSocket对象的方法接收数据
+          ds.receive(dp);
+          // 4. 解析数据包，并把数据在控制台显示
+          byte[] data = dp.getData();
+          int length = dp.getLength();
+          System.out.println(new String(data,0,length));
+          // 5. 关闭接收端
+          ds.close();
+      }
+  }
+  ```
+
+#### TCP发送数据
+
+- Java中的TCP通信
+
+  - Java对基于TCP协议的的网络提供了良好的封装，使用Socket对象来代表两端的通信端口，并通过Socket产生IO流来进行网络通信。
+  - Java为客户端提供了Socket类，为服务器端提供了ServerSocket类
+
+- 构造方法
+
+  | 方法名                               | 说明                                           |
+  | ------------------------------------ | ---------------------------------------------- |
+  | Socket(InetAddress address,int port) | 创建流套接字并将其连接到指定IP指定端口号       |
+  | Socket(String host, int port)        | 创建流套接字并将其连接到指定主机上的指定端口号 |
+
+- 相关方法
+
+  | 方法名                         | 说明                 |
+  | ------------------------------ | -------------------- |
+  | InputStream  getInputStream()  | 返回此套接字的输入流 |
+  | OutputStream getOutputStream() | 返回此套接字的输出流 |
+
+- 示例代码
+
+  ```java
+  public class Client {
+      public static void main(String[] args) throws IOException {
+          //TCP协议，发送数据
+  
+          //1.创建Socket对象
+          //细节：在创建对象的同时会连接服务端
+          //      如果连接不上，代码会报错
+          Socket socket = new Socket("127.0.0.1",10000);
+  
+          //2.可以从连接通道中获取输出流
+          OutputStream os = socket.getOutputStream();
+          //写出数据
+          os.write("aaa".getBytes());
+  
+          //3.释放资源
+          os.close();
+          socket.close();
+      }
+  }
+  ```
+
+#### TCP接收数据
+
+- 构造方法
+
+  | 方法名                  | 说明                             |
+  | ----------------------- | -------------------------------- |
+  | ServletSocket(int port) | 创建绑定到指定端口的服务器套接字 |
+
+- 相关方法
+
+  | 方法名          | 说明                           |
+  | --------------- | ------------------------------ |
+  | Socket accept() | 监听要连接到此的套接字并接受它 |
+
+- 注意事项
+
+  1. accept方法是阻塞的,作用就是等待客户端连接
+  2. 客户端创建对象并连接服务器,此时是通过三次握手协议,保证跟服务器之间的连接
+  3. 针对客户端来讲,是往外写的,所以是输出流
+     针对服务器来讲,是往里读的,所以是输入流
+  4. read方法也是阻塞的
+  5. 客户端在关流的时候,还多了一个往服务器写结束标记的动作
+  6. 最后一步断开连接,通过四次挥手协议保证连接终止
+
+- 三次握手和四次挥手
+
+- 示例代码
+
+```java
+public class Server {
+    public static void main(String[] args) throws IOException {
+        //TCP协议，接收数据
+
+        //1.创建对象ServerSocker
+        ServerSocket ss = new ServerSocket(10000);
+
+        //2.监听客户端的链接
+        Socket socket = ss.accept();
+
+        //3.从连接通道中获取输入流读取数据
+        InputStream is = socket.getInputStream();
+        int b;
+        while ((b = is.read()) != -1){
+            System.out.println((char) b);
+        }
+
+        //4.释放资源
+        socket.close();
+        ss.close();
+    }
+}
+```
+
+## 20.反射
+
+**专业的解释（了解一下）：**
+
+​       是在运行状态中，对于任意一个类，都能够知道这个类的所有属性和方法；
+
+​       对于任意一个对象，都能够调用它的任意属性和方法；
+
+​       这种动态获取信息以及动态调用对象方法的功能称为Java语言的反射机制。
+
+​	**通俗的理解：（掌握）**
+
+* 利用**反射**创建的对象**可以无视修饰符**调用类里面的内容
+
+* 可以跟**配置文件结合起来使用**，把要创建的对象信息和方法写在配置文件中。
+
+  读取到什么类，就创建什么类的对象
+
+  读取到什么方法，就调用什么方法
+
+  此时当需求变更的时候不需要修改代码，只要修改配置文件即可。
+
+### 学习内容
+
+反射都是从class字节码文件中获取的内容。
+
+* 如何获取class字节码文件的对象
+* 利用反射如何获取构造方法（创建对象）
+* 利用反射如何获取成员变量（赋值，获取值）
+* 利用反射如何获取成员方法（运行）
+
+### 获取字节码文件对象三种方式
+
+* Class这个类里面的静态方法forName（“全类名”）**（最常用）**
+* 通过class属性获取  
+* 通过对象获取字节码文件对象
+
+代码示例：
+
+```java
+//1.Class这个类里面的静态方法forName
+//Class.forName("类的全类名")： 全类名 = 包名 + 类名
+Class clazz1 = Class.forName("com.itheima.reflectdemo.Student");
+//源代码阶段获取 --- 先把Student加载到内存中，再获取字节码文件的对象
+//clazz 就表示Student这个类的字节码文件对象。
+//就是当Student.class这个文件加载到内存之后，产生的字节码文件对象
+
+
+//2.通过class属性获取
+//类名.class
+Class clazz2 = Student.class;
+
+//因为class文件在硬盘中是唯一的，所以，当这个文件加载到内存之后产生的对象也是唯一的
+System.out.println(clazz1 == clazz2);//true
+
+
+//3.通过Student对象获取字节码文件对象
+Student s = new Student();
+Class clazz3 = s.getClass();
+System.out.println(clazz1 == clazz2);//true
+System.out.println(clazz2 == clazz3);//true
+```
+
+### 字节码文件和字节码文件对象
+
+java文件：就是我们自己编写的java代码。
+
+字节码文件：就是通过java文件编译之后的class文件（是在硬盘上真实存在的，用眼睛能看到的）
+
+字节码文件对象：当class文件加载到内存之后，虚拟机自动创建出来的对象。
+
+​				这个对象里面至少包含了：构造方法，成员变量，成员方法。
+
+而我们的反射获取的是字节码文件对象，这个对象在内存中是唯一的。
+
+### 获取构造方法
+
