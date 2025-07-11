@@ -7047,7 +7047,730 @@ public class ClassLoaderDemo2 {
 }
 ```
 
+## 24.XML
+
++ XML的全称为(EXtensible Markup Language)，是一种可扩展的标记语言
+  标记语言: 通过标签来描述数据的一门语言(标签有时我们也将其称之为元素)
+  可扩展：标签的名字是可以自定义的,XML文件是由很多标签组成的,而标签名是可以自定义的
+
++ 作用
+
+  + 用于进行存储数据和传输数据
+  + 作为软件的配置文件
+
++ 作为配置文件的优势
+
+  + 可读性好
+  + 可维护性高
+
+标签规则和html差不多
+
+### 语法规则
+
++ 语法规则
+
+  + XML文件的后缀名为：xml
+
+  + 文档声明必须是第一行第一列
+
+    <?xml version="1.0" encoding="UTF-8" standalone="yes”?>
+    version：该属性是必须存在的
+    encoding：该属性不是必须的
+
+    ​	打开当前xml文件的时候应该是使用什么字符编码表(一般取值都是UTF-8)
+
+    standalone: 该属性不是必须的，描述XML文件是否依赖其他的xml文件，取值为yes/no
+
+  + 必须存在一个根标签，有且只能有一个
+
+  + XML文件中可以定义注释信息
+
+  + XML文件中可以存在以下特殊字符
+
+    ```java
+    &lt; < 小于
+    &gt; > 大于
+    &amp; & 和号
+    &apos; ' 单引号
+    &quot; " 引号
+    ```
+
+  + XML文件中可以存在CDATA区
+
+    <![CDATA[ …内容… ]]>
+
++ 示例代码
+
+  ```xml
+  <?xml version="1.0" encoding="UTF-8" ?>
+  <!--注释的内容-->
+  <!--本xml文件用来描述多个学生信息-->
+  <students>
+  
+      <!--第一个学生信息-->
+      <student id="1">
+          <name>张三</name>
+          <age>23</age>
+          <info>学生&lt; &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;的信息</info>
+          <message> <![CDATA[内容 <<<<<< >>>>>> ]]]></message>
+      </student>
+  
+      <!--第二个学生信息-->
+      <student id="2">
+          <name>李四</name>
+          <age>24</age>
+      </student>
+  
+  </students>
+  ```
+
+### xml的解析
+
++ 概述
+
+  xml解析就是从xml中获取到数据
+
++ 常见的解析思想
+
+  DOM(Document Object Model)文档对象模型:就是把文档的各个组成部分看做成对应的对象。
+  会把xml文件全部加载到内存,在内存中形成一个树形结构,再获取对应的值
+
++ 常见的解析工具
+
+  + JAXP: SUN公司提供的一套XML的解析的API
+  + JDOM: 开源组织提供了一套XML的解析的API-jdom
+  + DOM4J: 开源组织提供了一套XML的解析的API-dom4j,全称：Dom For Java
+  + pull: 主要应用在Android手机端解析XML
+
++ 解析的准备工作
+
+  1. 我们可以通过网站：https://dom4j.github.io/ 去下载dom4j
+
+     今天的资料中已经提供,我们不用再单独下载了,直接使用即可
+
+  2. 将提供好的dom4j-1.6.1.zip解压,找到里面的dom4j-1.6.1.jar
+
+  3. 在idea中当前模块下新建一个libs文件夹,将jar包复制到文件夹中
+
+  4. 选中jar包 -> 右键 -> 选择add as library即可
+
++ 需求
+
+  + 解析提供好的xml文件
+  + 将解析到的数据封装到学生对象中
+  + 并将学生对象存储到ArrayList集合中
+  + 遍历集合
+
++ 代码实现
+
+  ```java
+  <?xml version="1.0" encoding="UTF-8" ?>
+  <!--注释的内容-->
+  <!--本xml文件用来描述多个学生信息-->
+  <students>
+  
+      <!--第一个学生信息-->
+      <student id="1">
+          <name>张三</name>
+          <age>23</age>
+      </student>
+  
+      <!--第二个学生信息-->
+      <student id="2">
+          <name>李四</name>
+          <age>24</age>
+      </student>
+  
+  </students>
+  
+  // 上边是已经准备好的student.xml文件
+  public class Student {
+      private String id;
+      private String name;
+      private int age;
+  
+      public Student() {
+      }
+  
+      public Student(String id, String name, int age) {
+          this.id = id;
+          this.name = name;
+          this.age = age;
+      }
+  
+      public String getId() {
+          return id;
+      }
+  
+      public void setId(String id) {
+          this.id = id;
+      }
+  
+      public String getName() {
+          return name;
+      }
+  
+      public void setName(String name) {
+          this.name = name;
+      }
+  
+      public int getAge() {
+          return age;
+      }
+  
+      public void setAge(int age) {
+          this.age = age;
+      }
+  
+      @Override
+      public String toString() {
+          return "Student{" +
+                  "id='" + id + '\'' +
+                  ", name='" + name + '\'' +
+                  ", age=" + age +
+                  '}';
+      }
+  }
+  
+  /**
+   * 利用dom4j解析xml文件
+   */
+  public class XmlParse {
+      public static void main(String[] args) throws DocumentException {
+          //1.获取一个解析器对象
+          SAXReader saxReader = new SAXReader();
+          //2.利用解析器把xml文件加载到内存中,并返回一个文档对象
+          Document document = saxReader.read(new File("myxml\\xml\\student.xml"));
+          //3.获取到根标签
+          Element rootElement = document.getRootElement();
+          //4.通过根标签来获取student标签
+          //elements():可以获取调用者所有的子标签.会把这些子标签放到一个集合中返回.
+          //elements("标签名"):可以获取调用者所有的指定的子标签,会把这些子标签放到一个集合中并返回
+          //List list = rootElement.elements();
+          List<Element> studentElements = rootElement.elements("student");
+          //System.out.println(list.size());
+  
+          //用来装学生对象
+          ArrayList<Student> list = new ArrayList<>();
+  
+          //5.遍历集合,得到每一个student标签
+          for (Element element : studentElements) {
+              //element依次表示每一个student标签
+    
+              //获取id这个属性
+              Attribute attribute = element.attribute("id");
+              //获取id的属性值
+              String id = attribute.getValue();
+  
+              //获取name标签
+              //element("标签名"):获取调用者指定的子标签
+              Element nameElement = element.element("name");
+              //获取这个标签的标签体内容
+              String name = nameElement.getText();
+  
+              //获取age标签
+              Element ageElement = element.element("age");
+              //获取age标签的标签体内容
+              String age = ageElement.getText();
+  
+  //            System.out.println(id);
+  //            System.out.println(name);
+  //            System.out.println(age);
+  
+              Student s = new Student(id,name,Integer.parseInt(age));
+              list.add(s);
+          }
+          //遍历操作
+          for (Student student : list) {
+              System.out.println(student);
+          }
+      }
+  }
+  ```
+
+### DTD约束
+
++ 什么是约束
+
+  用来限定xml文件中可使用的标签以及属性
+
++ 约束的分类
+
+  + DTD
+  + schema
+
++ 编写DTD约束
+
+  + 步骤
+
+    1. 创建一个文件，这个文件的后缀名为.dtd
+
+    2. 看xml文件中使用了哪些元素
+
+       <!ELEMENT> 可以定义元素
+
+    3. 判断元素是简单元素还是复杂元素
+
+       简单元素：没有子元素。
+       复杂元素：有子元素的元素；
+
+  + 代码实现
+
+    ```java
+    <!ELEMENT persons (person)>
+    <!ELEMENT person (name,age)>
+    <!ELEMENT name (#PCDATA)>
+    <!ELEMENT age (#PCDATA)>
+    ```
+
++ 引入DTD约束
+
+  + 引入DTD约束的三种方法
+
+    + 引入本地dtd
+
+      <!DOCTYPE 根元素名称 SYSTEM ‘DTD文件的路径'>
+
+    + 在xml文件内部引入
+
+      <!DOCTYPE 根元素名称 [ dtd文件内容 ]>
+
+    + 引入网络dtd
+
+      <!DOCTYPE 根元素的名称 PUBLIC "DTD文件名称" "DTD文档的URL">
+
+  + 代码实现
+
+    + 引入本地DTD约束
+
+      ```xml
+      // 这是persondtd.dtd文件中的内容,已经提前写好
+      <!ELEMENT persons (person)>
+      <!ELEMENT person (name,age)>
+      <!ELEMENT name (#PCDATA)>
+      <!ELEMENT age (#PCDATA)>
+      
+      // 在person1.xml文件中引入persondtd.dtd约束
+      <?xml version="1.0" encoding="UTF-8" ?>
+      <!DOCTYPE persons SYSTEM 'persondtd.dtd'>
+      
+      <persons>
+          <person>
+              <name>张三</name>
+              <age>23</age>
+          </person>
+      
+      </persons>
+      ```
+
+    + 在xml文件内部引入
+
+      ```xml
+      <?xml version="1.0" encoding="UTF-8" ?>
+      <!DOCTYPE persons [
+              <!ELEMENT persons (person)>
+              <!ELEMENT person (name,age)>
+              <!ELEMENT name (#PCDATA)>
+              <!ELEMENT age (#PCDATA)>
+              ]>
+      
+      <persons>
+          <person>
+              <name>张三</name>
+              <age>23</age>
+          </person>
+      
+      </persons>
+      ```
+
+    + 引入网络dtd
+
+      ```xml
+      <?xml version="1.0" encoding="UTF-8" ?>
+      <!DOCTYPE persons PUBLIC "dtd文件的名称" "dtd文档的URL">
+      
+      <persons>
+          <person>
+              <name>张三</name>
+              <age>23</age>
+          </person>
+      
+      </persons>
+      ```
+
++ DTD语法
+
+  + 定义元素
+
+    定义一个元素的格式为：<!ELEMENT 元素名 元素类型>
+    简单元素：
+
+    ​	EMPTY: 表示标签体为空
+
+    ​	ANY: 表示标签体可以为空也可以不为空
+
+    ​	PCDATA: 表示该元素的内容部分为字符串
+
+    复杂元素：
+    ​	直接写子元素名称. 多个子元素可以使用","或者"|"隔开；
+    ​	","表示定义子元素的顺序 ; "|": 表示子元素只能出现任意一个
+    ​	"?"零次或一次, "+"一次或多次, "*"零次或多次;如果不写则表示出现一次
+
+  + 定义属性
+
+    格式
+
+    定义一个属性的格式为：<!ATTLIST 元素名称 属性名称 属性的类型 属性的约束>
+    属性的类型：
+    ​	CDATA类型：普通的字符串
+
+    属性的约束:
+
+    ​	// #REQUIRED： 必须的
+    ​	// #IMPLIED： 属性不是必需的
+    ​	// #FIXED value：属性值是固定的
+
+  + 代码实现
+
+    ```java
+    <!ELEMENT persons (person+)>
+    <!ELEMENT person (name,age)>
+    <!ELEMENT name (#PCDATA)>
+    <!ELEMENT age (#PCDATA)>
+    <!ATTLIST person id CDATA #REQUIRED>
+    
+    <?xml version="1.0" encoding="UTF-8" ?>
+    <!DOCTYPE persons SYSTEM 'persondtd.dtd'>
+    
+    <persons>
+        <person id="001">
+            <name>张三</name>
+            <age>23</age>
+        </person>
+    
+        <person id = "002">
+            <name>张三</name>
+            <age>23</age>
+        </person>
+    
+    </persons>
+    ​```
+    ```
+
+### schema约束
+
+chema和dtd的区别
+
+1. schema约束文件也是一个xml文件，符合xml的语法，这个文件的后缀名.xsd
+2. 一个xml中可以引用多个schema约束文件，多个schema使用名称空间区分（名称空间类似于java包名）
+3. dtd里面元素类型的取值比较单一常见的是PCDATA类型，但是在schema里面可以支持很多个数据类型
+4. schema 语法更加的复杂
+
+编写schema约束
+
++ 步骤
+
+  1，创建一个文件，这个文件的后缀名为.xsd。
+  2，定义文档声明
+  3，schema文件的根标签为： <schema>
+  4，在<schema>中定义属性：
+  ​	xmlns=http://www.w3.org/2001/XMLSchema
+  5，在<schema>中定义属性 ：
+  ​	targetNamespace =唯一的url地址，指定当前这个schema文件的名称空间。
+  6，在<schema>中定义属性 ：
+  ​	elementFormDefault="qualified“，表示当前schema文件是一个质量良好的文件。
+  7，通过element定义元素
+  8，判断当前元素是简单元素还是复杂元素
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<schema
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="http://www.itheima.cn/javase"
+    elementFormDefault="qualified"
+>
+
+    <!--定义persons复杂元素-->
+    <element name="persons">
+        <complexType>
+            <sequence>
+                <!--定义person复杂元素-->
+                <element name = "person">
+                    <complexType>
+                        <sequence>
+                            <!--定义name和age简单元素-->
+                            <element name = "name" type = "string"></element>
+                            <element name = "age" type = "string"></element>
+                        </sequence>
+                        
+                    </complexType>
+                </element>
+            </sequence>
+        </complexType>
+
+    </element>
+
+</schema>
+
+```
+
+引入schema约束
+
++ 步骤
+
+  1，在根标签上定义属性xmlns="http://www.w3.org/2001/XMLSchema-instance"
+  2，通过xmlns引入约束文件的名称空间
+  3，给某一个xmlns属性添加一个标识，用于区分不同的名称空间
+  ​	格式为: xmlns:标识=“名称空间地址” ,标识可以是任意的，但是一般取值都是xsi
+  4，通过xsi:schemaLocation指定名称空间所对应的约束文件路径
+  ​	格式为：xsi:schemaLocation = "名称空间url 文件路径“
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<persons
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://www.itheima.cn/javase"
+    xsi:schemaLocation="http://www.itheima.cn/javase person.xsd"
+>
+    <person>
+        <name>张三</name>
+        <age>23</age>
+    </person>
+
+</persons>
+```
+
+- schema约束定义属性
+
+  ```xml
+  <?xml version="1.0" encoding="UTF-8" ?>
+  <schema
+      xmlns="http://www.w3.org/2001/XMLSchema"
+      targetNamespace="http://www.itheima.cn/javase"
+      elementFormDefault="qualified"
+  >
+  
+      <!--定义persons复杂元素-->
+      <element name="persons">
+          <complexType>
+              <sequence>
+                  <!--定义person复杂元素-->
+                  <element name = "person">
+                      <complexType>
+                          <sequence>
+                              <!--定义name和age简单元素-->
+                              <element name = "name" type = "string"></element>
+                              <element name = "age" type = "string"></element>
+                          </sequence>
+                          
+                          <!--定义属性，required( 必须的)/optional( 可选的)-->
+                          <attribute name="id" type="string" use="required"></attribute>
+                      </complexType>
+                      
+                  </element>
+              </sequence>
+          </complexType>
+      </element>
+      
+  </schema>
+  
+  <?xml version="1.0" encoding="UTF-8" ?>
+  <persons
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns="http://www.itheima.cn/javase"
+      xsi:schemaLocation="http://www.itheima.cn/javase person.xsd"
+  >
+      <person id="001">
+          <name>张三</name>
+          <age>23</age>
+      </person>
+  </persons>
+  
+  ```
+
+  
+
+## 25.单元测试Junit
+
+对部分代码进行测试
+
+* Junit是一个第三方的工具。（把别人写的代码导入项目中）（专业叫法：导jar包）
+
+* 如果运行结果显示绿色，表示运行结果是正确的。
+
+  如果运行结果显示红色，表示运行结果是错误的。
+
+### 用法
+
+1，一定要先写一个方法。
+
+2，在这个方法的上面写@Test
+
+3，鼠标点一下@Test  按alt + 回车，点击Junit4
+
+​	此时就可以自动导包。
+
+​	如果自动导包失败（连接外网，或者自己手动导包）
+
+​	如果导包成功在左下角就会出现Junit4的相关jar包
+
+**手动导包**
+
+1，在当前模块下，右键新建一个文件夹（lib）
+
+2，把今天资料里面的两个jar包，拷贝到lib文件夹里面
+
+3，选中两个jar右键点击add as a lib....
+
+4，到代码中，找到@Test，按alt + 回车，再来导入。
+
+**运行测试代码**
+
+* 只能直接运行无参无返回值的非静态方法
+* 想要运行谁，就右键点击哪个方法。如果想要运行一个类里面所有的测试方法，选择类名，有点点击即可。
+
+**Junit正确打开方式**
+
+注意点：并不是直接在要测试的方法上面直接加@Test
+
+原因：因为要测试的方法有可能是有参数的，有返回值，或者是静态的。
+
+**使用方式**
+
+1，新建测试类
+
+2，新建测试方法（要测试的方法名 + Test） methodTest
+
+3，在这个方法中直接调用要测试的方法
+
+4，在测试方法的上面写@Test
+
+代码示例：
+
+```java
+//真正用来测试的类
+//测试用例（测试类）
+public class JunitTest {
+
+    //在这个类里面再写无参无返回值的非静态方法
+    //在方法中调用想要测试的方法
+
+    @Test
+    public void method2Test(){
+        //调用要测试的方法
+        JunitDemo1 jd = new JunitDemo1();
+        jd.method2(10);
+    }
+}
+```
+
+ 在单元测试中相对路径是相对当前模块而言的
+
+## 26.注解
+
+### 注解和注释的区别
+
+共同点：都可以对程序进行解释说明。
+
+不同点：注释，是给程序员看的。只在Java中有效。在class文件中不存在注释的。
+
+​		当编译之后，会进行注释擦除。
+
+​		注解，是给虚拟机看的。当虚拟机看到注解之后，就知道要做什么事情了。
+
+##1.2 如何使用注解（掌握）
+
+在以前看过注解@Override。
+
+当子类重写父类方法的时候，在重写的方法上面写@Override。
+
+当虚拟机看到@Override的时候，就知道下面的方法是重写的父类的。检查语法，如果语法正确编译正常，如果语法错误，就会报错。
+
+### Java中已经存在的注解
+
+@Override：表示方法的重写
+
+@Deprecated：表示修饰的方法已过时
+
+@SuppressWarnings("all")：压制警告
 
 
 
+除此之外，还需要掌握第三方框架中提供的注解：
 
+比如：Junit
+
+@Test 表示运行测试方法
+
+@Before 表示在Test之前运行，进行数据的初始化
+
+@After 表示在Test之后运行，进行数据的还原
+
+### 自定义注解
+
+自定义注解单独存在是没有什么意义的，一般会跟反射结合起来使用，会用发射去解析注解。
+
+针对于注解，只要掌握会使用别人已经写好的注解即可。
+
+关于注解的解析，一般是在框架的底层已经写好了。
+
+### 特殊属性
+
+value：
+
+​	当注解中只有"一个属性",并且属性名是"value",使用注解时,可以省略value属性名
+
+代码示例：
+
+```java
+//注解的定义
+public @interface Anno2 {
+    public String value();
+
+    public int age() default 23;
+}
+
+//注解的使用
+@Anno2("123")
+public class AnnoDemo2 {
+
+    @Anno2("123")
+    public void method(){
+
+    }
+}
+```
+
+### 元注解
+
+可以写在注解上面的注解
+
+@Target ：指定注解能在哪里使用
+
+@Retention ：可以理解为保留时间(生命周期) 
+
+#### Target:
+
+​    作用：用来标识注解使用的位置，如果没有使用该注解标识，则自定义的注解可以使用在任意位置。
+
+​    可使用的值定义在ElementType枚举类中，常用值如下
+
+* TYPE，类，接口
+* FIELD, 成员变量
+* METHOD, 成员方法
+* PARAMETER, 方法参数
+* CONSTRUCTOR, 构造方法
+* LOCAL_VARIABLE, 局部变量
+
+#### Retention：
+
+​    作用：用来标识注解的生命周期(有效范围)
+
+​    可使用的值定义在RetentionPolicy枚举类中，常用值如下
+
+* SOURCE：注解只作用在源码阶段，生成的字节码文件中不存在
+* CLASS：注解作用在源码阶段，字节码文件阶段，运行阶段不存在，默认值
+* RUNTIME：注解作用在源码阶段，字节码文件阶段，运行阶段
+
+注解的解析：
