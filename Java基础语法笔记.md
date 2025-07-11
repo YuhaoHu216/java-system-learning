@@ -6828,3 +6828,226 @@ public class ProxyUtil {
     }
 }
 ```
+
+## 22.log日志
+
+跟输出语句一样，可以把程序在运行过程中的详细信息都打印在控制台上。
+
+利用log日志还可以把这些详细信息保存到文件和数据库中。
+
+### 使用步骤
+
+不是java的，也不是自己写的，是第三方提供的代码，所以我们要导入jar包。
+
+* 把第三方的代码导入到当前的项目当中
+
+  新建lib文件夹，把jar粘贴到lib文件夹当中，全选后右键点击选择add as a ....
+
+  检测导入成功：导入成功后jar包可以展开。在项目重构界面可以看到导入的内容
+
+* 把配置文件粘贴到src文件夹下
+
+* 在代码中获取日志对象
+
+* 调用方法打印日志
+
+### 日志级别
+
+```
+TRACE, DEBUG, INFO, WARN, ERROR
+```
+
+还有两个特殊的：
+
+​	ALL：输出所有日志
+
+​	OFF：关闭所有日志
+
+日志级别从小到大的关系：
+
+​	TRACE < DEBUG < INFO < WARN < ERROR
+
+### 配置文件
+
+```java
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!--
+        CONSOLE ：表示当前的日志信息是可以输出到控制台的。
+    -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <!--输出流对象 默认 System.out 改为 System.err-->
+        <target>System.out</target>
+        <encoder>
+            <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度
+                %msg：日志消息，%n是换行符-->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level]  %c [%thread] : %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- File是输出的方向通向文件的 -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <charset>utf-8</charset>
+        </encoder>
+        <!--日志输出路径-->
+        <file>C:/code/itheima-data.log</file>
+        <!--指定日志文件拆分和压缩规则-->
+        <rollingPolicy
+                       class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!--通过指定压缩文件名称，来确定分割文件方式-->
+            <fileNamePattern>C:/code/itheima-data2-%d{yyyy-MMdd}.log%i.gz</fileNamePattern>
+            <!--文件拆分大小-->
+            <maxFileSize>1MB</maxFileSize>
+        </rollingPolicy>
+    </appender>
+
+    <!--
+
+    level:用来设置打印级别，大小写无关：TRACE, DEBUG, INFO, WARN, ERROR, ALL 和 OFF
+   ， 默认debug
+    <root>可以包含零个或多个<appender-ref>元素，标识这个输出位置将会被本日志级别控制。
+    -->
+    <root level="info">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE" />
+    </root>
+</configuration>
+```
+
+## 23.类加载器
+
+类加载器负责将.class文件(存储的物理文件)加载到内存里
+
+### 类加载的完整过程
+
++ 类加载时机
+
+  简单理解：字节码文件什么时候会被加载到内存中？
+
+  有以下的几种情况：
+
+  + 创建类的实例（对象）
+  + 调用类的类方法
+  + 访问类或者接口的类变量，或者为该类变量赋值
+  + 使用反射方式来强制创建某个类或接口对应的java.lang.Class对象
+  + 初始化某个类的子类
+  + 直接使用java.exe命令来运行某个主类
+
+  总结而言：用到了就加载，不用不加载
+
++ 类加载过程
+
+  1. 加载
+
+     + 通过包名 + 类名，获取这个类，准备用流进行传输
+     + 在这个类加载到内存中
+     + 加载完毕创建一个class对象
+
+  2. 链接
+
+     - 验证
+
+     确保Class文件字节流中包含的信息符合当前虚拟机的要求，并且不会危害虚拟机自身安全
+
+     (文件中的信息是否符合虚拟机规范有没有安全隐患)
+
+     - 准备
+
+       负责为类的类变量（被static修饰的变量）分配内存，并设置默认初始化值
+
+       (初始化静态变量)
+
+     - 解析
+
+       将类的二进制数据流中的符号引用替换为直接引用
+
+       (本类中如果用到了其他类，此时就需要找到对应的类)
+
+  3. 初始化
+
+     根据程序员通过程序制定的主观计划去初始化类变量和其他资源
+
+     (静态变量赋值以及初始化其他资源
+
++ 小结
+
+  - 当一个类被使用的时候,才会加载到内存
+  - 类加载的过程:加载,验证,准备,解析,初始化
+
+### 类加载的分类
+
++ 分类
+  + Bootstrap class loader：虚拟机的内置类加载器，通常表示为null ，并且没有父null
+  + Platform class loader：平台类加载器,负责加载JDK中一些特殊的模块
+  + System class loader：系统类加载器,负责加载用户类路径上所指定的类库
+
++ 类加载器的继承关系
+
+  + System的父加载器为Platform
+  + Platform的父加载器为Bootstrap
+
+```java
+public class ClassLoaderDemo1 {
+    public static void main(String[] args) {
+        //获取系统类加载器
+        ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+
+        //获取系统类加载器的父加载器 --- 平台类加载器
+        ClassLoader classLoader1 = systemClassLoader.getParent();
+
+        //获取平台类加载器的父加载器 --- 启动类加载器
+        ClassLoader classLoader2 = classLoader1.getParent();
+
+        System.out.println("系统类加载器" + systemClassLoader);
+        System.out.println("平台类加载器" + classLoader1);
+        System.out.println("启动类加载器" + classLoader2);
+
+    }
+}
+```
+
+### 双亲委派模型
+
+如果一个类加载器收到了类加载请求，它并不会自己先去加载，而是把这个请求委托给父类的加载器去执行，如果父类加载器还存在其父类加载器，则进一步向上委托，依次递归，请求最终将到达顶层的启动类加载器，如果父类加载器可以完成类加载任务，就成功返回，倘若父类加载器无法完成此加载任务，子加载器才会尝试自己去加载，这就是双亲委派模式
+
+### ClassLoader中的两个方法
+
+- 方法介绍
+
+  | 方法名                                              | 说明               |
+  | --------------------------------------------------- | ------------------ |
+  | public static ClassLoader getSystemClassLoader()    | 获取系统类加载器   |
+  | public InputStream getResourceAsStream(String name) | 加载某一个资源文件 |
+
+- 示例代码
+
+```java
+public class ClassLoaderDemo2 {
+    public static void main(String[] args) throws IOException {
+        //static ClassLoader getSystemClassLoader() 获取系统类加载器
+        //InputStream getResourceAsStream(String name)  加载某一个资源文件
+
+        //获取系统类加载器
+        ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+
+        //利用加载器去加载一个指定的文件
+        //参数：文件的路径（放在src的根目录下，默认去那里加载）
+        //返回值：字节流。
+        InputStream is = systemClassLoader.getResourceAsStream("prop.properties");
+
+        Properties prop = new Properties();
+        prop.load(is);
+
+        System.out.println(prop);
+
+        is.close();
+    }
+}
+```
+
+
+
+
+
