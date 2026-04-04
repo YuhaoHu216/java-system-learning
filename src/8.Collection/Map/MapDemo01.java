@@ -7,9 +7,12 @@ public class MapDemo01 {
         Map<String,String> map = new HashMap<>();
         map.put("001","HYH");
         map.put("002","胡宇浩");
+        map.put(null,"HYH");
+        map.put(null,"hyh");
 
         System.out.println(map);
         System.out.println(map.get("001"));
+        System.out.println(map.get(null));
         System.out.println(map.keySet());
         System.out.println(map.entrySet());
     }
