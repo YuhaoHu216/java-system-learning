@@ -21,18 +21,20 @@ public class TreadMakingDemo {
         threadPoolDemo();
     }
 
+    // 1. 继承 Thread 类
     private static void extendThreadDemo() throws InterruptedException {
         MyThread thread = new MyThread("继承Thread的线程");
         thread.start();
         thread.join();
     }
-
+    // 2. 实现 Runnable 接口
     private static void implementRunnableDemo() throws InterruptedException {
         Thread thread = new Thread(new MyRunnable(), "实现Runnable的线程");
         thread.start();
         thread.join();
     }
 
+    // 3. 实现 Callable 接口（有返回值）
     private static void implementCallableDemo() throws ExecutionException, InterruptedException {
         MyCallable callable = new MyCallable();
         FutureTask<String> futureTask = new FutureTask<>(callable);
@@ -42,7 +44,7 @@ public class TreadMakingDemo {
         String result = futureTask.get();
         System.out.println("Callable返回结果: " + result);
     }
-
+    // 4. 使用 Lambda 表达式
     private static void lambdaThreadDemo() throws InterruptedException {
         Thread thread = new Thread(() -> {
             for (int i = 1; i <= 5; i++) {
@@ -58,7 +60,7 @@ public class TreadMakingDemo {
         thread.start();
         thread.join();
     }
-
+    // 5. 线程池创建线程
     private static void threadPoolDemo() throws InterruptedException {
         ExecutorService executor = Executors.newFixedThreadPool(3);
 
