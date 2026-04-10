@@ -63,7 +63,6 @@ public class TreadMakingDemo {
     // 5. 线程池创建线程
     private static void threadPoolDemo() throws InterruptedException {
         ExecutorService executor = Executors.newFixedThreadPool(3);
-
         for (int i = 1; i <= 5; i++) {
             final int taskId = i;
             executor.submit(() -> {
